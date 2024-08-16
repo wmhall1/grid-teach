@@ -1,0 +1,3 @@
+eval "./mfinder"
+eval "python3 mplotting.py"
+

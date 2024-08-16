@@ -1,0 +1,2 @@
+g++ finder.cpp -o finder
+g++ mfinder.cpp -o mfinder

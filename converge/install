@@ -1,0 +1,9 @@
+#!/bin/bash
+g++ ../src/count.cpp -o counter
+chmod +x run
+chmod +x clean
+
+cd plotting/
+chmod +x install
+./install
+cd ../
