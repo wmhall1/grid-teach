@@ -1,0 +1,8 @@
+#!/bin/bash
+
+comm=$(cat K2/${1}.out)
+numper=$(wc -l < K2/${1}.out)
+#numper=$(expr $numper + 1)
+echo "$comm"
+echo "$numper"
+./starmaker <<< "$1 ${numper} ${comm}"

@@ -1,0 +1,4 @@
+#KIC/EPIC, ID, LLS.Per(s), LLS.Per_err, LLS.Freq(muHz), LLS.Freq_err, LLS.Amp(ppt), LLS.Amp_err, LLS.Phase(rad), LLS.Phase_err, Lor.Per, Lor.Per_err, Lor.HWHM(muHz), Lor.Power(ppt^2), Splitting(muHz), ell, m
+211916160 f_1a 201.47822 0.00028 4963.3157 0.0070 2.45 0.20 0.123 0.013 201.4782 0.0022 0.054 6.432 ...  1? 0? 
+211916160 f_1b 201.13867 0.00027 4971.6945 0.0066 2.59 0.20 0.494 0.012 201.1387 0.0021 0.052 7.168 8.38 1? 1? 
+

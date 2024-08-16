@@ -1,0 +1,9 @@
+#!/bin/bash
+for file in K2/*.out
+do
+  fl="${file:3}"
+  fl="${fl::-4}"
+  #echo $fl
+  ./run "$fl"
+done
+

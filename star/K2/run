@@ -1,0 +1,9 @@
+for file in ./*IC*
+do
+  if [[ $file != *.out ]]
+  then
+    echo "$file"
+    python3 new_periods.py "$file"
+  fi
+done
+
