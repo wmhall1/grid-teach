@@ -63,8 +63,8 @@ print(colors[0])
 plt.figure(200, figsize=(11,5))
 #ax = fig.subplots(1,1,1)
 
-color_t = np.linspace(10600,12600, 2000/50)
-color_m = np.linspace(470,1000, (1000-470)/5)
+color_t = np.linspace(10600,12600,int( 2000/50))
+color_m = np.linspace(470,1000, int((1000-470)/5))
 
 grid = plt.GridSpec(1, 6, wspace=1.25,)# hspace=1.25)
 
