@@ -1,0 +1,163 @@
+#!/bin/bash
+# Written by Weston Hall
+# 07-18-2022
+# Original running code for all the stars with
+# NO CLUSTERING
+#
+# Output is in results/ outputs/ AND compare_K2/
+
+rm compare_K2/weston_ast
+rm compare_K2/k2_solutions
+
+eval "g++ src/new_ajusteh.cpp -o ajusteh"
+
+func () {
+	if [ -f star/$1 ]; then
+	cd mincode/
+	wordcount=$(wc -l < ../star/$1)
+	echo $wordcount
+	wordcount=$(expr $wordcount + 1)
+	echo $wordcount
+	./cutoff <<< $wordcount
+	python3 clustermins.py $1 > ../results/$1
+	cat ../results/$1
+	echo $1 >> ../compare_K2/weston_ast
+	cat ../results/$1 >> ../compare_K2/weston_ast
+	echo $1 >> ../compare_K2/k2_solutions
+	python3 new_clustermins.py $1 >> ../compare_K2/k2_solutions
+	cd contour/
+	python3 familycontour.py s $1 l <<< "7"
+	cd ../
+	rm minoutput
+	cd ../
+	mv output outputs/${1}.out
+	mv modecs outputs/${1}.mode
+	echo $STAR "UP^^^"
+	fi
+}
+
+ajust () {
+	echo "$1 $2"
+	USESTAR="${1}_final"
+        ./ajusteh <<< "$USESTAR $2"
+	func $USESTAR
+}
+
+
+STAR="KIC4357037"
+ELL="1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC4552982"
+ELL="1 1 1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC7594781"
+ELL="1 1 2 1 1 2 2 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC10132702"
+ELL="1 1 2 2 2 2"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC11911480"
+ELL="2 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC60017836"
+ELL="1 1 2 1 2 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201355934"
+ELL="1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201719578"
+ELL="1 1 1 1 1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201730811"
+ELL="1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201802933"
+ELL="1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201806008"
+ELL="1" 
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC206212611"
+ELL="1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC210397465"
+ELL="1 1 1 1 2 2 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211596649"
+ELL="1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211629697"
+ELL="1 1 1 1 1 2 1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211914185"
+ELL="1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211916160"
+ELL="1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211926430"
+ELL="2 2 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC228682478"
+ELL="1 1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229227292"
+ELL="1 1 1 1 2 2 1 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229228364"
+ELL="1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220204626"
+ELL="1 2 1 1 1 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220258806"
+ELL="2 1 2 2 1 1 1 1 2 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220347759"
+ELL="1 2 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220453225"
+ELL="1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229228478"
+ELL="2 1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229228480"
+ELL="1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC210377280"
+ELL="1 1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220274129"
+ELL="1 1 2 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+

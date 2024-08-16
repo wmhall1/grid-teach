@@ -1,0 +1,158 @@
+#!/bin/bash
+# Written by Weston Hall
+# 07-18-2022
+# Makes solution results WITH  clustering
+# after making outputs via make_outputs
+#
+# Output is in results/csv/
+
+eval "g++ src/new_ajusteh.cpp -o ajusteh"
+
+func () {
+	if [ -f star/$1 ]; then
+	cd mincode/
+	wordcount=$(wc -l < ../star/$1)
+	echo $wordcount
+	wordcount=$(expr $wordcount + 1)
+	echo $wordcount
+	./cutoff <<< $wordcount
+	cd cluster/
+	Rscript cluster_mins.R
+	mv cluster_mins.csv ../../results/csv/${1}.csv
+	cd ../
+	rm minoutput
+	cd ../
+	#mv output outputs/${1}.out
+	rm output
+	echo $STAR "UP^^^"
+	fi
+}
+
+ajust () {
+	if [ ! -f results/csv/${1}_final.csv ]; then
+	echo "$1 $2"
+	USESTAR="${1}_final"
+        cp outputs/${USESTAR}.out ./output
+	cp outputs/${USESTAR}.mode ./modecs
+	func $USESTAR
+	fi
+}
+
+
+STAR="KIC4357037"
+ELL="1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC4552982"
+ELL="1 1 1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC7594781"
+ELL="1 1 2 1 1 2 2 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC10132702"
+ELL="1 1 2 2 2 2"
+ajust "${STAR}" "$ELL"
+
+STAR="KIC11911480"
+ELL="2 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC60017836"
+ELL="1 1 2 1 2 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201355934"
+ELL="1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201719578"
+ELL="1 1 1 1 1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201730811"
+ELL="1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201802933"
+ELL="1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC201806008"
+ELL="1" 
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC206212611"
+ELL="1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC210397465"
+ELL="1 1 1 1 2 2 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211596649"
+ELL="1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211629697"
+ELL="1 1 1 1 1 2 1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211914185"
+ELL="1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211916160"
+ELL="1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC211926430"
+ELL="2 2 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC228682478"
+ELL="1 1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229227292"
+ELL="1 1 1 1 2 2 1 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229228364"
+ELL="1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220204626"
+ELL="1 2 1 1 1 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220258806"
+ELL="2 1 2 2 1 1 1 1 2 2 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220347759"
+ELL="1 2 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220453225"
+ELL="1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229228478"
+ELL="2 1 2"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC229228480"
+ELL="1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC210377280"
+ELL="1 1 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+STAR="EPIC220274129"
+ELL="1 1 2 1 1 1 1 1"
+ajust "${STAR}" "$ELL"
+
+
