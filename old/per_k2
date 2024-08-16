@@ -1,0 +1,120 @@
+#!/bin/bash
+rm compare_K2/weston_ast
+rm compare_K2/k2_solutions
+
+funt () {
+	cd mincode/
+	./match <<< "5"
+	python3 clustermins.py $1 > ../results/$1
+	cat ../results/$1
+	echo $1 >> ../compare_K2/weston_ast
+	cat ../results/$1 >> ../compare_K2/weston_ast
+	echo $1 >> ../compare_K2/k2_solutions
+	python3 new_clustermins.py $1 >> ../compare_K2/k2_solutions
+	cd contour/
+	#python3 familycontour.py <<< "4"
+	cd ../
+	rm minoutput
+	cd ../
+	rm output
+	echo $STAR "UP^^^"
+}
+
+func () {
+        cd star/table/
+        echo $1
+        ./a.out <<< "$1 $2"
+        cat "$1.out" >> periods_k2
+        #echo "\\hline" >> periods_k2
+        cd ../../
+}
+
+
+STAR="KIC4357037"
+func $STAR "0.012"
+
+STAR="KIC4552982"
+func $STAR "0.202"
+
+STAR="KIC7594781"
+func $STAR "0.75"
+
+STAR="KIC10132702"
+func $STAR "0.0032"
+
+STAR="KIC11911480"
+func $STAR "0.80"
+
+STAR="EPIC60017836"
+func $STAR "0.051"
+
+STAR="EPIC201355934"
+func $STAR "0.50"
+
+STAR="EPIC201719578"
+func $STAR "0.72"
+
+STAR="EPIC201730811"
+func $STAR "0.543"
+
+STAR="EPIC201802933"
+func $STAR "0.57"
+
+STAR="EPIC201806008"
+func $STAR "0.021"
+
+STAR="EPIC206212611"
+func $STAR "0.26"
+
+STAR="EPIC210397465"
+func $STAR "0.73"
+
+STAR="EPIC211596649"
+func $STAR "2.20"
+
+STAR="EPIC211629697"
+func $STAR "0.76"
+
+STAR="EPIC211914185"
+func $STAR "0.015"
+
+STAR="EPIC211916160"
+func $STAR "2.59"
+
+STAR="EPIC211926430"
+func $STAR "0.484"
+
+STAR="EPIC228682478"
+func $STAR "0.933"
+
+STAR="EPIC229227292"
+func $STAR "0.078"
+
+STAR="EPIC229228364"
+func $STAR "0.203"
+
+STAR="EPIC220204626"
+func $STAR "0.88"
+
+STAR="EPIC220258806"
+func $STAR "0.172" 
+
+STAR="EPIC220347759"
+func $STAR "0.413"
+
+STAR="EPIC220453225"
+func $STAR "0.54"
+
+STAR="EPIC229228478"
+func $STAR "1.23"
+
+STAR="EPIC229228480"
+func $STAR "12.81"
+
+STAR="EPIC210377280"
+func $STAR "1.05"
+
+STAR="EPIC220274129"
+func $STAR "0.51"
+
+

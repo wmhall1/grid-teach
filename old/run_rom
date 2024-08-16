@@ -1,0 +1,211 @@
+#!/bin/bash
+rm compare_rom/weston_ast
+
+funx () {
+	cd mincode/
+	./match <<< "3"
+	python3 clustermins.py $1 > ../results/$1
+	cat ../results/$1
+	echo $1 >> ../compare_rom/weston_ast
+	cat ../results/$1 >> ../compare_rom/weston_ast
+	rm minoutput
+	cd ../
+	rm output
+	echo $1 "^^^^"
+}
+
+func () {
+        cd mincode/
+        ./match <<< "3"
+        python3 clustermins.py $1 > ../results/$1
+        cat ../results/$1
+        echo $1 >> ../compare_rom/weston_ast
+        cat ../results/$1 >> ../compare_rom/weston_ast
+        echo $1 >> ../compare_rom/rom_solutions
+        python3 new_clustermins.py $1 >> ../compare_rom/rom_solutions
+        cd contour/
+        #python3 familycontour.py <<< "4"
+        cd ../
+        rm minoutput
+        cd ../
+        rm output
+        echo $STAR "UP^^^"
+}
+
+STAR="HS1531+7436"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="GD244"
+./ajusteh <<< "$STAR 2 1 2 1 1"
+func $STAR
+
+STAR="G226-29"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="HS0507+0434B"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="LP133-144"
+./ajusteh <<< "$STAR 1 2 2"
+func $STAR
+
+STAR="EC11507-1519"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="L19-2"
+./ajusteh <<< "$STAR 1 2 2 1 1"
+func $STAR
+
+STAR="GD66"
+./ajusteh <<< "$STAR 2 2 1 1"
+func $STAR
+
+STAR="G132-12"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="G207-9"
+./ajusteh <<< "$STAR 1 2 1 1 1"
+func $STAR
+
+STAR="G117-B15A"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="MCT2148-2911"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="G38-29"
+./ajusteh <<< "$STAR 2 2 2 1 1 2 2 2 1 1 2 1 2 1"
+func $STAR
+
+STAR="PG1541+650"
+./ajusteh <<< "$STAR 1 1 2"
+func $STAR
+
+STAR="G191-16"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="G185-32"
+./ajusteh <<< "$STAR 1 2 2 1 1"
+func $STAR
+
+STAR="EC14012-1446"
+./ajusteh <<< "$STAR 1 1 1 1 1 1 2 2 1"
+func $STAR
+
+STAR="EC23487-2424"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="GD165"
+./ajusteh <<< "$STAR 2 1 1"
+func $STAR
+
+STAR="R548"
+./ajusteh <<< "$STAR 1 1 1 2 2"
+func $STAR
+
+STAR="HE1258+0123"
+./ajusteh <<< "$STAR 2 1 2 1 1 1"
+func $STAR
+
+STAR="GD154"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="GD385"
+./ajusteh <<< "$STAR 2 1"
+func $STAR
+
+STAR="HE1429-037"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="HS1249+0426"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="G238-53"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="HS1625+1231"
+./ajusteh <<< "$STAR 2 1 1 2 1 1 1 1"
+func $STAR
+
+STAR="G29-38"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="PG2303+242"
+./ajusteh <<< "$STAR 2 1 2 1"
+func $STAR
+
+STAR="MCT0145-2211"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="BPM30551"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="GD99"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="BPM24754"
+./ajusteh <<< "$STAR 2 1 1 2"
+func $STAR
+
+STAR="KUV02464+3239"
+./ajusteh <<< "$STAR 2 1 2 2 1 1"
+func $STAR
+
+STAR="PG1149+058"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="BPM31594"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="KUV11370+4222"
+./ajusteh <<< "$STAR 1 1 2"
+func $STAR
+
+STAR="HS1824-6000"
+./ajusteh <<< "$STAR 1 2 1 2"
+func $STAR
+
+STAR="KUV08368+4026"
+./ajusteh <<< "$STAR 1 2"
+func $STAR
+
+STAR="R808"
+./ajusteh <<< "$STAR 2 1 2 1 2 2 2 1 1 2 1 2 2 2 1 2 1"
+func $STAR
+
+STAR="G255-2"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="HLTau-76"
+./ajusteh <<< "$STAR 1 2 1 2 1 1 2 1 1 2 1 1"
+func $STAR
+
+STAR="G232-38"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="G30-20"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+

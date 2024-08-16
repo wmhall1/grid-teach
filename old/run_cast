@@ -1,0 +1,375 @@
+#!/bin/bash
+rm compare_cast/weston_ast
+
+funx () {
+	cd mincode/
+	./match <<< "3"
+	python3 clustermins.py $1 > ../results/$1
+	cat ../results/$1
+	echo $1 >> ../compare_cast/weston_ast
+	cat ../results/$1 >> ../compare_cast/weston_ast
+	rm minoutput
+	cd ../
+	rm output
+	echo $1 "^^^^"
+}
+
+func () {
+        cd mincode/
+        ./match <<< "3"
+        python3 clustermins.py $1 > ../results/$1
+        cat ../results/$1
+        echo $1 >> ../compare_cast/weston_ast
+        cat ../results/$1 >> ../compare_cast/weston_ast
+        echo $1 >> ../compare_cast/cast_solutions
+        python3 new_clustermins.py $1 >> ../compare_cast/cast_solutions
+        cd contour/
+        #python3 familycontour.py <<< "4"
+        cd ../
+        rm minoutput
+        cd ../
+        rm output
+        echo $STAR "UP^^^"
+}
+
+STAR="G117-B15A"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="R548"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="HLTau-76"
+./ajusteh <<< "$STAR 1 1 2 1 1 1 1 2 2 2 1 1"
+func $STAR
+
+STAR="G132-12"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ1354+0108"
+./ajusteh <<< "$STAR 2 2 2 1 2"
+func $STAR
+
+STAR="WDJ0818+3132"
+./ajusteh <<< "$STAR 2 2"
+func $STAR
+
+STAR="WDJ1345-0055"
+./ajusteh <<< "$STAR 2 2"
+func $STAR
+
+STAR="WDJ0847+4510"
+./ajusteh <<< "$STAR 2"
+func $STAR
+
+STAR="WDJ0756+2020"
+./ajusteh <<< "$STAR 2"
+func $STAR
+
+STAR="L19-2"
+./ajusteh <<< "$STAR 1 2 2 1 2"
+func $STAR
+
+STAR="WDJ1338-0023"
+./ajusteh <<< "$STAR 1 1 2"
+func $STAR
+
+STAR="LP133-144"
+./ajusteh <<< "$STAR 1 2 2"
+func $STAR
+
+STAR="HS0951+1312"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="G238-53"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="G238-53"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="EC11507-1519"
+./ajusteh <<< "$STAR 2 2"
+func $STAR
+
+STAR="WDJ0939+5609"
+./ajusteh <<< "$STAR 2"
+func $STAR
+
+STAR="WDJ0913+4036"
+./ajusteh <<< "$STAR 2 1 1 1"
+func $STAR
+
+STAR="WDJ1007+5245"
+./ajusteh <<< "$STAR 2 1 1 1"
+func $STAR
+
+STAR="KUV11370+4222"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="WDJ1125+0345"
+./ajusteh <<< "$STAR 2 1 2 1"
+func $STAR
+
+STAR="WDJ0958+0130"
+./ajusteh <<< "$STAR 2 1 2 1"
+func $STAR
+
+STAR="WDJ2214-0025"
+./ajusteh <<< "$STAR 1 1 1 2"
+func $STAR
+
+STAR="WDJ0018+0031"
+./ajusteh <<< "$STAR 2 1 2 1"
+func $STAR
+
+STAR="GD385"
+./ajusteh <<< "$STAR 2 1"
+func $STAR
+
+STAR="WDJ0853+0005"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ1136-0137"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ1218+0042"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ1533-0206"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="MCT2148-2911"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="GD66"
+./ajusteh <<< "$STAR 2 2 1 1"
+func $STAR
+
+STAR="WDJ1015+0306"
+./ajusteh <<< "$STAR 2 2 1"
+func $STAR
+
+STAR="WDJ1002+5818"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="HE0031-5525"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="WDJ1724+5835"
+./ajusteh <<< "$STAR 2 1 1"
+func $STAR
+
+STAR="WDJ0959+0238"
+./ajusteh <<< "$STAR 2 2 1"
+func $STAR
+
+STAR="WDJ0111+0018"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="GD244"
+./ajusteh <<< "$STAR 2 1 2 1 1"
+func $STAR
+
+STAR="WDJ2128-0007"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="WDJ2350-0054"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="WDJ0917+0926"
+./ajusteh <<< "$STAR 2 2 1"
+func $STAR
+
+STAR="WDJ0214-0823"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="HS1249+0426"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ0842+3707"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ0916+3855"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="WDJ1015+5954"
+./ajusteh <<< "$STAR 1 1 1 1 1"
+func $STAR
+
+STAR="MCT0145-221"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="HS0507+0434B"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="WDJ0911+0310"
+./ajusteh <<< "$STAR 1 1"
+func $STAR
+
+STAR="WDJ0949-0000"
+./ajusteh <<< "$STAR 1 1 1 1 1"
+func $STAR
+
+STAR="HE0344+1207"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="G207-9"
+./ajusteh <<< "$STAR 1 1 1 1 1"
+func $STAR
+
+STAR="WDJ0815+4437"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="WDJ1355+5454"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ0851+0605"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ1650+3010"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ1310-0159"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="WDJ1222-0243"
+./ajusteh <<< "$STAR 1"
+func $STAR
+
+STAR="G29-38"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="WDJ2134-0743"
+./ajusteh <<< "$STAR 1 1 1 1 1"
+func $STAR
+
+STAR="EC14012-1446"
+./ajusteh <<< "$STAR 1 1 1 1 1 1 1 1 1"
+func $STAR
+
+STAR="WDJ0000-0046"
+./ajusteh <<< "$STAR 1 2 1"
+func $STAR
+
+STAR="WDJ1711+6541"
+./ajusteh <<< "$STAR 1 1 1 1 1 1 1 1"
+func $STAR
+
+STAR="WDJ2231+1346"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="WDJ1502-0001"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="WDJ0825+0329"
+./ajusteh <<< "$STAR 1 2 1"
+func $STAR
+
+STAR="WDJ0942+5733"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="WDJ0906-0024"
+./ajusteh <<< "$STAR 1 1 1 1 1"
+func $STAR
+
+STAR="PG2303+242"
+./ajusteh <<< "$STAR 1 1 1 1 1"
+func $STAR
+
+STAR="WDJ1216+0922"
+./ajusteh <<< "$STAR 1 1 1 1 1"
+func $STAR
+
+STAR="WDJ0318+0030"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="HE1429-037"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="WDJ2209-0919"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="WDJ1700+3549"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="WDJ1255+0211"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="WDJ1157+0553"
+./ajusteh <<< "$STAR 1 1 1 1"
+func $STAR
+
+STAR="EC23487-2424"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="HE0532-560"
+./ajusteh <<< "$STAR 1 1 1 1 1 1 1 1"
+func $STAR
+
+STAR="HE1258+0123"
+./ajusteh <<< "$STAR 1 1 1 1 1 1"
+func $STAR
+
+STAR="HS1625+1231"
+./ajusteh <<< "$STAR 1 1 1 1 1 1 1 1"
+func $STAR
+
+STAR="WDJ2209-0919"
+./ajusteh <<< "$STAR 1 1 1 1 1 1"
+func $STAR
+
+STAR="R808"
+./ajusteh <<< "$STAR 2 1 1 2 1 1 1 1"
+func $STAR
+
+STAR="GD154"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+STAR="HS0952+1816"
+./ajusteh <<< "$STAR 1 1 1"
+func $STAR
+
+
+
+
+
+

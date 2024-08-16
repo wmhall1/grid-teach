@@ -1,0 +1,9 @@
+#!/bin/bash
+STAR="MCT2148-2911"
+./ajusteh <<< "$STAR 1"
+cd mincode/
+./match <<< "3"
+python3 sort.py <<< "5" > ../results/$STAR
+cat ../results/$STAR
+echo $STAR >> ../compare/weston_ast
+head -1 ../results/$STAR >> ../compare/weston_ast

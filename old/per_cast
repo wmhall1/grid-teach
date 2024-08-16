@@ -1,0 +1,299 @@
+#!/bin/bash
+rm star/table/periods
+
+
+funx () {
+	cd mincode/
+	./match <<< "3"
+	python3 clustermins.py $1 > ../results/$1
+	cat ../results/$1
+	echo $1 >> ../compare_cast/weston_ast
+	cat ../results/$1 >> ../compare_cast/weston_ast
+	rm minoutput
+	cd ../
+	rm output
+	echo $1 "^^^^"
+}
+
+funt () {
+        cd mincode/
+        ./match <<< "3"
+        python3 clustermins.py $1 > ../results/$1
+        cat ../results/$1
+        echo $1 >> ../compare_cast/weston_ast
+        cat ../results/$1 >> ../compare_cast/weston_ast
+        echo $1 >> ../compare_cast/cast_solutions
+        python3 new_clustermins.py $1 >> ../compare_cast/cast_solutions
+        cd contour/
+        #python3 familycontour.py <<< "4"
+        cd ../
+        rm minoutput
+        cd ../
+        rm output
+        echo $STAR "UP^^^"
+}
+
+func () {
+	cd star/table/
+	echo $1
+	./a.out <<< "$1 $2"
+	cat "$1.out" >> periods 
+	#echo "\\hline" >> periods
+	cd ../../
+} 
+
+
+STAR="G117-B15A"
+func $STAR "6.14"
+
+STAR="R548"
+func $STAR "3.5"
+
+STAR="HLTau-76"
+func $STAR "2.40"
+
+STAR="G132-12"
+func $STAR "4.3"
+
+STAR="WDJ1354+0108"
+func $STAR "1.1"
+
+STAR="WDJ0818+3132"
+func $STAR "2.9"
+
+STAR="WDJ1345-0055"
+func $STAR "2.4"
+
+STAR="WDJ0847+4510"
+func $STAR "7.3"
+
+STAR="WDJ0756+2020"
+func $STAR "6.8"
+
+STAR="L19-2"
+func $STAR "0.6"
+
+STAR="WDJ1338-0023"
+func $STAR "2.2" 
+
+STAR="LP133-144"
+func $STARi "4.0"
+
+STAR="HS0951+1312"
+func $STAR "3.6"
+
+STAR="G238-53"
+func $STAR "9"
+
+STAR="EC11507-1519"
+func $STAR "3.59"
+
+STAR="WDJ0939+5609"
+func $STAR "7.2"
+
+STAR="WDJ0913+4036"
+func $STAR "3.8"
+
+STAR="WDJ1007+5245"
+func $STAR "7.7"
+
+STAR="KUV11370+4222"
+func $STAR "2.5"
+
+STAR="WDJ1125+0345"
+func $STAR "2.8"
+
+STAR="WDJ0958+0130"
+func $STAR "2.5"
+
+STAR="WDJ2214-0025"
+func $STAR "6.1"
+
+STAR="WDJ0018+0031"
+func $STAR "3.7"
+
+STAR="GD385"
+func $STAR "3.7"
+
+STAR="WDJ0853+0005"
+func $STAR "4.0"
+
+STAR="WDJ1136-0137"
+func $STAR "3.1"
+
+STAR="WDJ1218+0042"
+func $STAR "16"
+
+STAR="WDJ1533-0206"
+func $STAR "4.8"
+
+STAR="MCT2148-2911"
+func $STAR "12.6"
+
+STAR="GD66"
+func $STAR "3.81"
+
+STAR="WDJ1015+0306"
+func $STAR "5.8"
+
+STAR="WDJ1002+5818"
+func $STAR "5.3"
+
+STAR="HE0031-5525"
+func $STAR "2.5"
+
+STAR="WDJ1724+5835"
+func $STAR "3.2"
+
+STAR="WDJ0959+0238"
+func $STAR "5.8"
+
+STAR="WDJ0111+0018"
+func $STAR "12.95"
+
+STAR="GD244"
+func $STAR "4.0"
+
+STAR="WDJ2128-0007"
+func $STAR "9.7" 
+
+STAR="WDJ2350-0054"
+func $STAR "6.2"
+
+STAR="WDJ0917+0926"
+func $STAR "9.2"
+
+STAR="WDJ0214-0823"
+func $STAR "46.7"
+
+STAR="HS1249+0426"
+func $STAR "7.55"
+
+STAR="WDJ0842+3707"
+func $STAR "17.9"
+
+STAR="WDJ0916+3855"
+func $STAR "9.1"
+
+STAR="WDJ1015+5954"
+func $STAR "8.5"
+
+STAR="MCT0145-221"
+func $STAR "15"
+
+STAR="HS0507+0434B"
+func $STAR "7.6"
+
+STAR="WDJ0911+0310"
+func $STAR "16.4"
+
+STAR="WDJ0949-0000"
+func $STAR "5.1"
+
+STAR="HE0344+1207"
+func $STAR "11.4"
+
+STAR="G207-9"
+func $STAR "17.3"
+
+STAR="WDJ0815+4437"
+func $STAR "6.2"
+
+STAR="WDJ1355+5454"
+func $STAR "21.8"
+
+STAR="WDJ0851+0605"
+func $STAR "22.4"
+
+STAR="WDJ1650+3010"
+func $STAR "14.7"
+
+STAR="WDJ1310-0159"
+func $STAR "9.2"
+
+STAR="WDJ1222-0243"
+func $STAR "22"
+
+STAR="G29-38"
+func $STAR "1.5"
+
+STAR="WDJ2134-0743"
+func $STAR "13.30"
+
+STAR="EC14012-1446"
+func $STAR "2.9"
+
+STAR="WDJ0000-0046"
+func $STAR "9.0"
+
+STAR="WDJ1711+6541"
+func $STAR "1.2"
+
+STAR="WDJ2231+1346"
+func $STAR "13.7"
+
+STAR="WDJ1502-0001"
+func $STAR "11.1"
+
+STAR="WDJ0825+0329"
+func $STAR "3.7"
+
+STAR="WDJ0942+5733"
+func $STAR "12.2"
+
+STAR="WDJ0906-0024"
+func $STAR "2.5"
+
+STAR="PG2303+242"
+func $STAR "8"
+
+STAR="WDJ1216+0922"
+func $STAR "20.5"
+
+STAR="WDJ0318+0030"
+func $STAR "10.6"
+
+STAR="HE1429-037"
+func $STAR "10.2"
+
+STAR="WDJ2209-0919"
+func $STAR "4.7"
+
+STAR="WDJ1700+3549"
+func $STAR "19.3"
+
+STAR="WDJ1255+0211"
+func $STAR "16.4"
+
+STAR="WDJ1157+0553"
+func $STAR "5.6"
+
+STAR="EC23487-2424"
+func $STAR "12.8"
+
+STAR="HE0532-560"
+func $STAR "2.1"
+
+STAR="HE1258+0123"
+func $STAR "9.3"
+
+STAR="HS1625+1231"
+func $STAR "7.8"
+
+STAR="WDJ2209-0919"
+func $STAR "4.7"
+
+STAR="R808"
+func $STAR "2.1"
+
+STAR="GD154"
+func $STAR "0.3"
+
+STAR="HS0952+1816"
+func $STAR "3.9"
+
+
+
+
+
+
