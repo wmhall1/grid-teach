@@ -1,0 +1,5 @@
+#!/bin/bash
+chmod +x clean
+chmod +x get_csv
+chmod +x run
+chmod +x curlcommand 

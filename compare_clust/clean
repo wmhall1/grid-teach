@@ -1,0 +1,5 @@
+rm weston_ast*
+rm *.xml
+rm *.vot
+rm gaia_model_fit
+rm table

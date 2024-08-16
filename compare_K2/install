@@ -1,0 +1,4 @@
+#!/bin/bash
+chmod +x clean
+chmod +x run
+chmod +x curlcommand 
