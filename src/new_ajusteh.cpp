@@ -3,13 +3,15 @@
  * Grid comparison code
  * Original: 06/18/2021
  * Final: 03/30/2022
- * Updated: 06/13/2022
+ * Updated: 08/16/2024
  *
  * The majority of this code's logic was taken from the ajusteh comparison code written
  * in FORTRAN by Dr. Barbara Castanheira Endl. I have rewritten it to be a bit more
  * streamlined, have more readable output, and work for my format of grid. Should be 
  * able to read grids that have been concatenated in the same file, instead of hard 
  * coding individual file names as previous grids have been.
+ *
+ * Differences from ajusteh.cpp: This includes the N/100 factor in calculating sigma
  *
  * Dependencies:
  *  -written to be used with GNU g++ compiler
@@ -62,7 +64,7 @@ int main(int argc, char *argv[]){
     //Heres the variables for file names and streams
     string calcpname, perfilename, ofilename;
     ifstream calcperiods, periodlist;
-    ofstream output, outputper, doutput, modeput, minoutput, newcalcp;
+    ofstream output, outputper, doutput, modeput, minoutput;//, newcalcp;
     
     //Here is user input data and counts to hold:
     int l, np = 0, ii, num, iil1, iil2;
@@ -191,7 +193,7 @@ int main(int argc, char *argv[]){
     
     outputper.open("outputper");
     minoutput.open("mincode/minoutput");
-    newcalcp.open("calcperiods_n");
+    //newcalcp.open("calcperiods_n");
 
     /*
      * This next part is the main process of reading in the grid
@@ -205,7 +207,7 @@ int main(int argc, char *argv[]){
         do{                //Read in ll and modec for particular model
             calcperiods >> ll[i] >> modec[i];
             i++;
-        }while(ll[i-1] != 0);
+        }while(ll[i-1] != 0 && i < 100);			///8/16/24 Sanity Check
 
         ii = i-1;            //Get total number of periods
         
@@ -308,7 +310,7 @@ int main(int argc, char *argv[]){
 	    }
           
 	    //sigma3=sqrt(sigma2/wt);
-	    //CHANGE DHERE
+	    //CHANGED HERE
 	    //
 	    //
 	    //
@@ -385,7 +387,7 @@ int main(int argc, char *argv[]){
     outputper.close();
     modeput.close();
     minoutput.close();
-    newcalcp.close();
+	//newcalcp.close();
     
     //more debug output
     if(debug){for(int i=0;i<300;i++){cout << modecs[i] << endl;}}

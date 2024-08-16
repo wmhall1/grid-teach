@@ -202,7 +202,7 @@ int main(int argc, char *argv[]){
         do{                //Read in ll and modec for particular model
             calcperiods >> ll[i] >> modec[i];
             i++;
-        }while(ll[i-1] != 0);
+        }while(ll[i-1] != 0 && i < 100);			///8/16/2024 Sanity Check
 
         ii = i-1;            //Get total number of periods
         
