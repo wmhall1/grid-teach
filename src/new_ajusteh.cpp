@@ -222,6 +222,13 @@ int main(int argc, char *argv[]){
         iil1=num+1;        //num l=1
         iil2= ii -iil1;        //num l=2
         //cout << "first: " << ii << endl; 
+	
+	//08/16/24 adding earlier debug output
+	if(debug){
+            doutput << run << endl
+                <<"modeo   modecs  w  \t    iil1="
+                    << iil1 << " iil2 =" << iil2 << " ii =" << ii << endl;
+	}
 
         /* Matching observed modes to calculated modes*/    
         for(int i =0; i< np; i++){
@@ -351,10 +358,12 @@ int main(int argc, char *argv[]){
 
         //DEBUG OUTPUT
         if(debug){
+		/*
             doutput << run << endl
                 <<"modeo   modecs  w  \t    iil1="
                     << iil1 << " iil2 =" << iil2 << " ii =" << ii << endl;
-            for(int i=0;i<np;i++){
+            */
+	    for(int i=0;i<np;i++){
                 doutput << modeo[i] << " " << modecs[i] << " " <<  w[i] << "\t " 
                     << 1/(pow((modeo[i]-modecs[i]),2)*w[i]*iil1/ii)<< endl;
             }
