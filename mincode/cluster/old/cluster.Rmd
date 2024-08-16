@@ -1,0 +1,448 @@
+---
+title: "plot"
+author: "Weston Hall"
+date: "2/6/2022"
+output: html_document
+---
+
+```{r, include = FALSE}
+
+library(rgl)
+#library(plot3D)
+#library(scatterplot3d)
+library(viridis)
+library(cluster)
+library(factoextra)
+setwd("~/grid05-24/mincode/cluster")
+
+
+```
+
+```{r,echo = FALSE}
+#####READING DATA AND SCALING###################
+data <- read.table('../minoutput2', sep=',')
+#data <- data[-3]
+k_data <- data[-5]
+
+colnames(data) <- c("temp", "mass", "he","h","s")
+
+scaled_data <- as.data.frame(scale(data))
+#scaled_data <- scaled_data[-5]
+
+pairwise_dist <- dist(scaled_data)
+#mds_4d <- cmdscale(pairwise_dist, 4)
+#mds_5d <- cmdscale(pairwise_dist, 5)
+
+#plot(mds_5d, xlab="", ylab="", main="Pairwise distances between observations", col = rgb(0,0,0.5,0.5))
+#####################################################
+
+```
+
+```{r, echo = FALSE}
+######PICKING K VALUE######################################
+k_val = 20
+
+k_value = c(2:100)
+distortions = c(2:100)
+
+for (k in k_value){
+  fit <- kmeans(scaled_data, k)
+  distortions[k - 1] <- fit$tot.withinss
+}
+
+plot(k_value, distortions,
+     ylab = "WSS Score", xlab = "K Value")
+
+abline(v = k_val, col = "red")
+
+BIC <- c(2:100)
+d <- ncol(scaled_data)
+n <- nrow(scaled_data)
+
+for(k in k_value){
+  BIC[k-1] <- distortions[k-1] + (k - 1 + k * d) * log(n)
+}
+
+plot(k_value, BIC,
+     xlab = "K Value", ylab = "BIC")
+abline(v = k_val, col = "red")
+
+###################################################
+
+## Set color pallete
+col_pallete <- rainbow(k_val)
+
+####MAKING K MODEL##############################################
+k_model <- kmeans(scaled_data, k_val, iter.max = 400)
+
+plot(data$temp, data$mass, col = col_pallete[k_model$cluster],
+     xlab = "temp", ylab = "mass", pch = 19)
+
+# plot(mds_5d, xlab="", ylab="", main="Pairwise distances between observations", 
+#      col = col_pallete[k_model$cluster], pch = 19)
+########################################################
+
+
+##########FIND THE MINIMUMS FOR EACH CLUSTER#######################
+cluster_mins = data.frame(matrix(NA, nrow = k_val, ncol = 5))
+colnames(cluster_mins) <- c("temp", "mass", "he","h","s")
+
+for(i in 1:k_val){
+  min_idx <- which.min(data[k_model$cluster == i, ]$s)
+  cluster_mins[i,] <- data[k_model$cluster == i,][min_idx,]
+}
+##########################################################
+```
+```{r, echo= FALSE, include = FALSE}
+pam.res <- pam(scaled_data, k_val)
+
+rgl.open()
+plot3d(
+  x = scaled_data$temp, y= scaled_data$mass, z = scaled_data$h,
+  col = col_pallete[pam.res$cluster],
+  xlab = "Scaled Temperature", ylab = "Scaled Mass", zlab = "Scaled H index",
+  size = 4, type =1
+)
+spheres3d(
+  x = pam.res$medoids[,1], y= pam.res$medoids[,2], z= pam.res$medoids[,4],
+  col = col_pallete, radius = 0.05
+)
+legend3d("topright", legend=c(1:k_val), cex = .7, col = col_pallete, pch = 19, title = "Family")
+rglwidget()
+
+
+```
+
+
+
+
+
+```{r, echo = FALSE}
+
+####PLOTS#################################################################
+
+##Moving plot
+#rgl.open()
+plot3d(
+  x = data$temp, z = data$mass, y = data$h,
+  col = col_pallete[k_model$cluster],
+  xlab = "Temperature", zlab = "Mass", ylab = "Hydrogen",
+  size = 4, type = 1
+)
+spheres3d(
+  x = cluster_mins[,1], z= cluster_mins[,2], y= cluster_mins[,4],
+  color = "black", radius = 20
+)
+legend3d("topright", legend=c(1:k_val), cex = .7, col = col_pallete, pch = 19, title = "Family")
+rglwidget()
+
+
+
+#11 630 200  0.59 0.03
+
+rgl.open()
+plot3d(
+  x = scaled_data$temp, y= scaled_data$mass, z = scaled_data$h,
+  col = col_pallete[k_model$cluster],
+  xlab = "Scaled Temperature", ylab = "Scaled Mass", zlab = "Scaled H index",
+  size = 4, type =1
+)
+spheres3d(
+  x = k_model$centers[,1], y= k_model$centers[,2], z= k_model$centers[,4],
+  col = col_pallete, radius = 0.05
+)
+legend3d("topright", legend=c(1:k_val), cex = .7, col = col_pallete, pch = 19, title = "Family")
+rglwidget()
+
+
+
+```
+
+
+```{r,echo = FALSE, fig.width = 15, fig.height = 10}
+shape = rep(c(19,17,8,9,11),4)
+for(i in c(0,1)){
+  par(mai = c(0.75, 0.75, 0.1, 0.1))
+  par(mfrow = c(2,3), xpd = TRUE)
+  for(hydrogen in seq(400+i*300,650+i*250,50)){
+    plot(data[data$h == hydrogen,]$temp, data[data$h == hydrogen,]$mass*0.001, col = col_pallete[k_model$cluster[data$h == hydrogen]],
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = 'Mass (Solar Masses)', cex.lab = 2,
+       xlim = c(12600,10600), ylim=c(0.50,1.0),
+       pch = shape[k_model$cluster[data$h == hydrogen]], cex = 1.3)
+    points(
+      x = cluster_mins[cluster_mins$h == hydrogen,][,1], y= cluster_mins[cluster_mins$h == hydrogen,][,2]*0.001,
+      col = "black", pch = 4, cex = 4)
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    text(12000, 1.0, paste("Hydrogen level =",hydrogen*-0.01), cex = 2)
+
+  }
+}
+plot.new()
+legend("topleft", legend=c(1:k_val), cex = 3, col = col_pallete, pch = shape, ncol = 3, title = "Solution Family")
+```
+
+
+
+```{r, eval = FALSE, include = FALSE}
+
+# ##### EXTERNAL UNCERTAINTY ##############
+# uncertainties <- data.frame(matrix(NA, nrow = nrow(cluster_mins), ncol = 8))
+# colnames(uncertainties) <- c('utemp', 'ltemp', 'umass', 'lmass', 'uhe', 'lhe', 'uh', 'lh')
+# 
+# for(i in 1:nrow(uncertainties)){
+#   
+#   for(meas in 1:4){
+#     umin <- 0
+#     lmin <- 0
+#     for(j in 1:nrow(cluster_mins)){
+#     
+#       difference <- cluster_mins[j,meas] - cluster_mins[i,meas]
+#       
+#       if(abs(difference) < umin | abs(difference) < lmin | umin == 0 | lmin == 0){
+#         if(cluster_mins[j,meas] > cluster_mins[i,meas]){
+#           umin <- sqrt( (difference **2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#         } else if(cluster_mins[j,meas] < cluster_mins[i,meas]){
+#           lmin <- sqrt( (difference **2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#         }
+#       }
+#     
+#     }
+#     uncertainties[i,c(2*meas-1, 2*meas)] <- c(umin,lmin)
+#   }
+#   #uncertainties[i,] <- c(utemp, ltemp, umass, lmass, uhe, lhe, uh, lh)
+# }
+# 
+# print(uncertainties)
+
+```
+
+```{r, echo = FALSE}
+##### EXTERNAL UNCERTAINTY ##############
+uncertainties <- data.frame(matrix(NA, nrow = nrow(cluster_mins), ncol = 8))
+colnames(uncertainties) <- c('utemp', 'ltemp', 'umass', 'lmass', 'uhe', 'lhe', 'uh', 'lh')
+nearest <- c(1:nrow(cluster_mins))
+
+for(i in 1:nrow(cluster_mins)){
+  min <- 10000
+  for(j in 1:nrow(cluster_mins)){
+    dist <- sqrt( (cluster_mins$temp[i] - cluster_mins$temp[j])**2 + (cluster_mins$mass[i] - cluster_mins$mass[j])**2 +(cluster_mins$he[i] - cluster_mins$he[j])**2 + (cluster_mins$h[i] - cluster_mins$h[j])**2 )
+    if(i != j & dist < min){
+      nearest[i] <- j
+      min <- dist
+    }
+  }
+}
+
+for(i in 1:nrow(cluster_mins)){
+  uncertainties$utemp[i] <- sqrt( (cluster_mins$temp[i] - cluster_mins$temp[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$ltemp[i] <- uncertainties$utemp[i]
+  uncertainties$umass[i] <- sqrt( (cluster_mins$mass[i] - cluster_mins$mass[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$lmass[i] <- uncertainties$umass[i]
+  uncertainties$uhe[i] <- sqrt( (cluster_mins$he[i] - cluster_mins$he[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$lhe[i] <- uncertainties$uhe[i]
+  uncertainties$uh[i] <- sqrt( (cluster_mins$h[i] - cluster_mins$h[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$lh[i] <- uncertainties$uh[i]
+}
+
+####### OLD ALGORTHM ###########
+# for(i in 1:nrow(uncertainties)){
+#   utemp <- NA
+#   ltemp <- NA
+#   umass <- 0
+#   lmass <- 0
+#   uhe <- 0
+#   lhe <- 0
+#   uh <- 0
+#   lh <- 0
+#   
+#     for(j in 1:nrow(cluster_mins)){
+#     
+#     ######
+#     t_diff <- abs(cluster_mins$temp[j] - cluster_mins$temp[i])
+#     if(cluster_mins$temp[j] > cluster_mins$temp[i]){
+#       if(is.na(utemp) | t_diff < utemp){
+#         utemp <- sqrt( (t_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     } else if(cluster_mins$temp[j] < cluster_mins$temp[i]){
+#       if(is.na(ltemp) | t_diff < ltemp){
+#         ltemp <- sqrt( (t_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     }
+#     #####
+# 
+#     #####
+#     m_diff <- cluster_mins$mass[j] - cluster_mins$mass[i]
+#     if(cluster_mins$mass[j] > cluster_mins$mass[i]){
+#       if(m_diff < umass | umass == 0){
+#         umass <- sqrt( (m_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     } else if(cluster_mins$mass[j] < cluster_mins$mass[i]){
+#       if(abs(m_diff) < lmass | lmass == 0){
+#         lmass <- sqrt( (m_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     }
+#     #####
+# 
+#     #####
+#     he_diff <- cluster_mins$he[j] - cluster_mins$he[i]
+#     if(cluster_mins$he[j] > cluster_mins$he[i]){
+#       if(he_diff < uhe | uhe == 0){
+#         uhe <- sqrt( (he_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     } else if(cluster_mins$he[j] < cluster_mins$he[i]){
+#       if(abs(he_diff) < lhe | lhe == 0){
+#         lhe <- sqrt( (he_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     }
+#     #####
+# 
+#     #####
+#     h_diff <- cluster_mins$h[j] - cluster_mins$h[i]
+#     if(cluster_mins$h[j] > cluster_mins$h[i]){
+#       if(h_diff < uh | uh == 0){
+#         uh <- sqrt( (h_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     } else if(cluster_mins$h[j] < cluster_mins$h[i]){
+#       if(abs(h_diff) < lh | lh == 0){
+#         lh <- sqrt( (h_diff**2) / (abs(cluster_mins$s[i] - cluster_mins$s[j])) )
+#       }
+#     }
+#     #####
+#     
+#   }
+#   uncertainties[i,] <- c(utemp, ltemp, umass, lmass, uhe, lhe, uh, lh)
+# }
+
+print(uncertainties)
+```
+
+
+```{r, echo = FALSE}
+rgl.open()
+# plot3d(
+#   x = data$temp, y = data$mass, z = data$h,
+#   col = col_pallete[k_model$cluster],
+#   xlab = "Temperature", ylab = "Mass", zlab = "Hydrogen",
+#   size = 5, type = 1
+# )
+plotting_list <- c(1:nrow(cluster_mins))
+for(i in 1:nrow(cluster_mins)){
+  if(uncertainties$utemp[i] > 1000 | uncertainties$umass[i] > 350 | uncertainties$uh[i] > 400)
+    plotting_list <- plotting_list[-i]
+}
+
+plot3d(
+  x = cluster_mins$temp, y= cluster_mins$mass, z= cluster_mins$h,
+  type = 's', col = col_pallete[k_model$cluster], radius = 20
+)
+
+for(i in plotting_list){
+  rgl.lines(x = c(cluster_mins$temp[i]+uncertainties$utemp[i], cluster_mins$temp[i]-uncertainties$ltemp[i]), 
+            y = c(cluster_mins$mass[i], cluster_mins$mass[i]), 
+            z = c(cluster_mins$h[i], cluster_mins$h[i]),
+            color = col_pallete[k_model$cluster[i]])
+}
+for(i in plotting_list){
+  rgl.lines(x = c(cluster_mins$temp[i], cluster_mins$temp[i]), 
+            y = c(cluster_mins$mass[i]+uncertainties$umass[i], cluster_mins$mass[i]-uncertainties$lmass[i]), 
+            z = c(cluster_mins$h[i], cluster_mins$h[i]),
+            color = col_pallete[k_model$cluster[i]])
+}
+for(i in plotting_list){
+  rgl.lines(x = c(cluster_mins$temp[i], cluster_mins$temp[i]), 
+            y = c(cluster_mins$mass[i], cluster_mins$mass[i]), 
+            z = c(cluster_mins$h[i]+uncertainties$uh[i], cluster_mins$h[i]-uncertainties$lh[i]),
+            color = col_pallete[k_model$cluster[i]])
+}
+legend3d("topright", legend=plotting_list, cex = .7, col = col_pallete[plotting_list], pch = 19)
+rglwidget()
+
+########################################
+```
+
+
+```{r, echo = FALSE}
+############2D PLOTS ####################
+
+#set alphas
+add.alpha <- function(col, alpha=1){
+  if(missing(col))
+    stop("Please provide a vector of colours.")
+  apply(sapply(col, col2rgb)/255, 2, 
+                     function(x) 
+                       rgb(x[1], x[2], x[3], alpha=alpha))  
+}
+
+
+par(mar = c(5, 4, 4, 8))
+plot(cluster_mins$temp, cluster_mins$mass,
+     ylab = "mass", xlab = "temp", pch = 19,
+     xlim = c(12650, 10550), ylim = c(500,1000),
+     col = col_pallete)
+text(cluster_mins$temp, cluster_mins$mass -20, labels = cluster_mins$h, cex = 0.75)
+#arrows(x, avg-sdev, x, avg+sdev, length=0.05, angle=90, code=3)
+suppressWarnings(arrows(cluster_mins$temp, cluster_mins$mass - uncertainties$lmass, cluster_mins$temp, cluster_mins$mass+uncertainties$umass,
+       length = 0.05, angle = 90, code = 3, col = add.alpha(col_pallete, alpha = 0.5)))
+suppressWarnings(arrows(cluster_mins$temp - uncertainties$ltemp, cluster_mins$mass, cluster_mins$temp+uncertainties$utemp, cluster_mins$mass,
+       length = 0.05, angle = 90, code = 3, col = add.alpha(col_pallete, alpha = 0.5)))
+
+####ADding Spectroscopic solution for G117
+points(11630,590, col = "black", pch = 19)
+suppressWarnings(arrows(11630, 590-30, 11630, 590+30,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+suppressWarnings(arrows(11630 - 200, 590, 11630+200, 590,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+text(11630 + 130, 590+20, "Optical Spectra", cex = 0.5)
+
+points(11900,530, col = "black", pch = 19)
+suppressWarnings(arrows(11900, 530-70, 11900, 530+70,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+suppressWarnings(arrows(11900 - 140, 530, 11900+140, 530,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+text(12000, 550, "UV Spectra", cex = 0.5)
+
+
+par(xpd = TRUE)
+legend("topright", inset = c(- 0.2, 0), legend=paste("S=",cluster_mins$s), col = col_pallete, cex = 0.75, pch = 19)
+```
+```{r}
+#print(cluster_mins[cluster_mins$temp < 12400 & cluster_mins$temp > 11430 & cluster_mins$mass < 620 & cluster_mins$mass > 460,])
+
+idx <- which(cluster_mins$temp < 12400 & cluster_mins$temp > 11430 & cluster_mins$mass < 620 & cluster_mins$mass > 460)
+
+small_data <- data[k_model$cluster == idx,]
+plot(small_data$temp, small_data$mass,
+     col = rgb(0,0,0.7, 0.5), pch = 19)
+
+
+##SPec
+points(11630,590, col = "black", pch = 19)
+suppressWarnings(arrows(11630, 590-30, 11630, 590+30,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+suppressWarnings(arrows(11630 - 200, 590, 11630+200, 590,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+text(11630 + 130, 590+20, "Optical Spectra", cex = 0.5)
+
+points(11900,530, col = "black", pch = 19)
+suppressWarnings(arrows(11900, 530-70, 11900, 530+70,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+suppressWarnings(arrows(11900 - 140, 530, 11900+140, 530,
+       length = 0.05, angle = 90, code = 3, col = "black"))
+text(12000, 550, "UV Spectra", cex = 0.5)
+
+```
+
+
+
+
+```{r, echo =FALSE}
+print(cluster_mins[which.min(uncertainties$utemp),])
+
+print(cluster_mins[which.min(uncertainties$umass),])
+
+print(cluster_mins[which.min(uncertainties$uhe),])
+
+print(cluster_mins[which.min(uncertainties$uh),])
+```

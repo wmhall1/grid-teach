@@ -1,0 +1,668 @@
+---
+title: "families"
+author: "Weston Hall"
+date: "3/6/2022"
+output: html_document
+---
+
+```{r, include = FALSE}
+
+library(rgl)
+#library(plot3D)
+#library(scatterplot3d)
+library(viridis)
+library(cluster)
+library(factoextra)
+library(stringr)
+library(maotai)
+setwd("~/grid05-24/mincode/cluster")
+
+
+```
+
+```{r,echo = FALSE}
+#####READING DATA AND SCALING###################
+data <- read.table('../minoutput2', sep=';', colClasses=c("integer","integer", "integer", "integer", "numeric","character"))
+#data <- data[-3]
+k_data <- data[-5]
+
+colnames(data) <- c("temp", "mass", "he","h","s", "modes")
+
+test<- data$modes[1]
+test_split <- strsplit(test,"  ")[[1]]
+test_split <- test_split[test_split!=""]
+str_sub(test_split[1],-4, -3)
+mode_mat<-matrix(NA,nrow = nrow(data), ncol=length(test_split),byrow=TRUE)
+
+for(i in 1:nrow(data)){
+  test <- data$modes[i]
+  test_split <- strsplit(test, "  ")[[1]]
+  test_split <- test_split[test_split!=""]
+  for(n in 1:length(test_split)-1){
+    test_split[n] = str_sub(test_split[n],-4,-3)
+  }
+  test_split[length(test_split)] = str_sub(test_split[length(test_split)], -3,-2)
+  mode_mat[i,] = test_split
+}
+
+scaled_data <- as.data.frame(mode_mat)
+k_value = c(2:30)
+distortions = c(2:30)
+
+for (k in k_value){
+  fit <- kmeans(scaled_data, k)
+  distortions[k - 1] <- fit$tot.withinss
+}
+
+plot(k_value, distortions,
+     ylab = "WSS Score", xlab = "K Value")
+abline(v = 10, col = "red")
+k_val = 10
+k_model <- kmeans(scaled_data, k_val, iter.max = 400)
+```
+
+
+```{r,echo = FALSE, fig.width = 15, fig.height = 10}
+par(mai = c(0.75, 0.75, 0.1, 0.1))
+par(mfrow = c(2,3), xpd = TRUE)
+for(hydrogen in seq(400,950,25)){
+for(helium in seq(150,400,25)){
+  temp_modes <- scaled_data[data$he==helium & data$h==hydrogen,]
+  #print(nrow(temp_modes))
+
+
+maximum <- nrow(temp_modes[!duplicated(temp_modes), ])
+
+k_value = c(2:maximum)
+distortions = c(2:maximum)
+
+if(maximum < 10){
+  print(hydrogen)
+  print(helium)
+}
+
+for (k in k_value){
+  fit <- kmeans(temp_modes, k)
+  distortions[k - 1] <- fit$tot.withinss
+}
+
+plot(k_value, distortions,
+     ylab = "WSS Score", xlab = "K Value")
+abline(v = k_val, col = "red")
+}
+}
+
+```
+
+
+
+```{r, echo= FALSE}
+
+cluster_mins = data.frame(matrix(NA, nrow = 60, ncol = 6))
+colnames(cluster_mins) <- c("temp", "mass", "he","h","s", "members")
+
+minimums <- rep(0, 60)
+
+# group <- rep(0,nrow(data))
+# data <- cbind(data, group)
+g <- 1
+legendlabels <- data.frame(matrix(NA, nrow = 53, ncol = 2))
+i=1
+for(hydrogen in seq(400,950,25)){
+  for(helium in seq(150,400,25)){
+    test_data = data[data$h == hydrogen & data$he == helium, ]
+    if(nrow(test_data) > 0){
+      min_idx <- which.min(test_data$s)
+      cluster_mins[i,] <- c(test_data[min_idx,1:5], nrow(test_data))
+      #suppressWarnings(data[rownames(test_data),]$group <- g)
+      legendlabels[g,] <- c(toString(hydrogen * 0.01), toString(helium * 0.01))
+      g <- g+1
+    }
+    i = i+1
+  }
+}
+cluster_mins <- cluster_mins[is.na(cluster_mins$temp) == FALSE,]
+cluster_mins <- cluster_mins[order(cluster_mins$s),]
+
+
+```
+
+```{r,include=FALSE}
+##### EXTERNAL UNCERTAINTY ##############
+uncertainties <- data.frame(matrix(NA, nrow = nrow(cluster_mins), ncol = 8))
+colnames(uncertainties) <- c('utemp', 'ltemp', 'umass', 'lmass', 'uhe', 'lhe', 'uh', 'lh')
+nearest <- c(1:nrow(cluster_mins))
+
+for(i in 1:nrow(cluster_mins)){
+  min <- 10000
+  for(j in 1:nrow(cluster_mins)){
+    dist <- sqrt( (cluster_mins$temp[i] - cluster_mins$temp[j])**2 + (cluster_mins$mass[i] - cluster_mins$mass[j])**2)
+                  #+(cluster_mins$he[i] - cluster_mins$he[j])**2 + (cluster_mins$h[i] - cluster_mins$h[j])**2 )
+    if(i != j & dist < min){
+      nearest[i] <- j
+      min <- dist
+    }
+  }
+}
+
+for(i in 1:nrow(cluster_mins)){
+  uncertainties$utemp[i] <- sqrt( (cluster_mins$temp[i] - cluster_mins$temp[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$ltemp[i] <- uncertainties$utemp[i]
+  uncertainties$umass[i] <- sqrt( (cluster_mins$mass[i] - cluster_mins$mass[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$lmass[i] <- uncertainties$umass[i]
+  uncertainties$uhe[i] <- sqrt( (cluster_mins$he[i] - cluster_mins$he[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$lhe[i] <- uncertainties$uhe[i]
+  uncertainties$uh[i] <- sqrt( (cluster_mins$h[i] - cluster_mins$h[nearest[i]])**2 / abs(cluster_mins$s[i] - cluster_mins$s[nearest[i]]) ) 
+  uncertainties$lh[i] <- uncertainties$uh[i]
+}
+
+```
+
+
+```{r, echo = FALSE}
+S_cut <- 10
+plotting_data <- cluster_mins[cluster_mins$s < S_cut, ]
+plotting_uncertainties <- uncertainties[cluster_mins$s < S_cut, ]
+
+col_pallete <- rainbow(nrow(plotting_data))
+
+shape = rep(c(19,17,8,9,11),5)
+
+par(mai = c(1, 1, 0.1, 1.75), xpd = T)
+plot(plotting_data$temp, plotting_data$mass*0.001, 
+     pch = shape,
+     col = rainbow(nrow(plotting_data)),
+     xlab = "Temperature (K)", ylab = expression("Mass (M"["\u2609"]*")"),
+     xlim = c(12600,10600),
+     ylim = c(.450, .975),
+     xaxt = 'n')
+suppressWarnings(arrows(plotting_data$temp, (plotting_data$mass - plotting_uncertainties$lmass)*0.001, plotting_data$temp, (plotting_data$mass+plotting_uncertainties$umass)*0.001,
+       length = 0.05, angle = 90, code = 3, col = col_pallete))
+suppressWarnings(arrows(plotting_data$temp - plotting_uncertainties$ltemp, (plotting_data$mass)*0.001, plotting_data$temp+plotting_uncertainties$utemp, (plotting_data$mass)*0.001,
+       length = 0.05, angle = 90, code = 3, col = col_pallete))
+axis(1, at = c(10600,10800,11000,11200,11400, 11600, 11800, 12000, 12200, 12400, 12600))
+legend(10500, 0.996, legend = paste("He=", plotting_data$he*0.01, " H=", plotting_data$h*0.01, " S=", plotting_data$s), col = col_pallete, pch = shape,
+       ncol = 1, cex = 0.75)
+
+
+```
+
+
+
+```{r,echo = FALSE, fig.width = 15, fig.height = 10}
+# col_pallete <- rep(rainbow(7), (g-1)/7)
+# vector <- c(rep(0,53))
+# idx =1
+# for(q in 1:9){
+#   for(i in 0:5){
+#     vector[idx] <- q+10*i
+#     idx = idx+1
+#   }
+# }
+# col_pallete <- col_pallete[vector]
+# shape <- rep(c(19,17,8,9,11),11)
+
+col_pallete <- rainbow(11)
+shape <- c(19,17,15, 8,23,19,17,15, 8,23,19)
+
+#Plotting s
+s_cut <- 10
+
+#Two pages
+for(i in c(0,1)){
+  #Make plot for each hydrogen level
+  par(mai = c(0.75, 0.75, 0.1, 0.1))
+  par(mfrow = c(2,3), xpd = TRUE)
+  for(hydrogen in seq(400+i*300,650+i*300,25)){
+    
+    #Plot data
+    plot(data[data$h == hydrogen,]$temp, data[data$h == hydrogen,]$mass*0.001, col = col_pallete[data[data$h == hydrogen,]$he * 0.04 - 6],
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 2,
+       xlim = c(12600,10600), ylim=c(0.47,0.97),
+       pch = shape[data[data$h == hydrogen,]$he * 0.02 - 3], bg = col_pallete[data[data$h == hydrogen,]$he * 0.02 - 3],
+       cex = 1.3)
+    
+    #Add minimum markers
+    points(
+      x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$s < s_cut & cluster_mins$members > 10,][,1], y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$s < s_cut & cluster_mins$members > 10,][,2]*0.001,
+      col = "black", pch = 4, cex = 2.5, lwd = 3
+    )
+    
+    #Label markers
+    if(nrow(cluster_mins[cluster_mins$h == hydrogen & cluster_mins$s < s_cut & cluster_mins$members > 10,]) > 0){
+      text(
+        x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$s < s_cut & cluster_mins$members > 10,][,1], 
+        y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$s < s_cut & cluster_mins$members > 10,][,2]*0.001 + 0.05,
+        labels = paste("S=",cluster_mins[cluster_mins$h == hydrogen & cluster_mins$s < s_cut & cluster_mins$members > 10,]$s),
+        cex = 1.5
+      )
+    }
+    
+    #Labels
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    text(12200, 0.97, expression("log(M"["He"]*") ="), cex = 2)
+    text(11800, 0.972, sprintf("%1.1f",hydrogen*-0.01), cex = 2)
+
+  }
+  #Add legend to last graph
+  #legend("bottomright", legend = c("-1.5","-2.0", "-2.5", "-3.0", "-3.5", "-4.0"), cex =2, col = col_pallete, pch =shape, pt.bg = col_pallete, title = expression("log(M"["He"]*")"))
+}
+
+# par(mfrow = c(1,1))
+# plot.new()
+# legend("topleft", legend=legendlabels, cex = 3, col = col_pallete, pch = shape, ncol = 5, title = expression("Solution Family (-log(M"["H"]*"), -log(M"["He"]*")"))
+```
+
+```{r,echo = FALSE, fig.width = 15, fig.height = 10}
+  #Make plot for each hydrogen level
+mem_cut = mean(cluster_mins$members) - sd(cluster_mins$members)
+par(mai = c(0.75, 0.75, 0.1, 0.1))
+par(mfrow = c(2,3), xpd = TRUE)
+for(hydrogen in seq(400,950,25)){
+for(helium in seq(150,400,25)){
+    if(nrow(cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]) > 0){
+    #Plot data
+    plot(data[data$h == hydrogen & data$he == helium,]$temp, data[data$h == hydrogen & data$he==helium,]$mass*0.001, col = col_pallete[data[data$h == hydrogen & data$he == helium,]$he * 0.04 - 5],
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 2,
+       xlim = c(12600,10600), ylim=c(0.47,0.97),
+       pch = shape[data[data$h == hydrogen & data$he == helium ,]$he * 0.04 - 5], bg = col_pallete[data[data$h == hydrogen & data$he == helium,]$he * 0.04 - 5],
+       cex = 1.3)
+    
+    #Add minimum markers
+    points(
+      x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,1], y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,2]*0.001,
+      col = "black", pch = 4, cex = 2.5, lwd = 3
+    )
+    
+    #Label markers
+   # if(nrow(cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]) > 0){
+      text(
+        x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,1], 
+        y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,2]*0.001 + 0.05,
+        labels = paste("S=",cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]$s),
+        cex = 1.5
+      )
+  #  }
+    
+    #Labels
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    text(12200, 0.97, expression("log(M"["H"]*") ="), cex = 2)
+    text(11800, 0.972, sprintf("%1.2f",hydrogen*-0.01), cex = 2)
+    text(12200, 0.47, expression("log(M"["He"]*") ="), cex = 2)
+    text(11800, 0.472, sprintf("%1.2f",helium*-0.01), cex = 2)
+}
+}
+}
+  #Add legend to last graph
+  #legend("bottomright", legend = c("-1.5","-2.0", "-2.5", "-3.0", "-3.5", "-4.0"), cex =2, col = col_pallete, pch =shape, pt.bg = col_pallete, title = expression("log(M"["He"]*")"))
+
+
+```
+
+
+```{r,echo = FALSE, fig.width = 15, fig.height = 10}
+  #Make plot for each hydrogen level
+
+
+col_pallete <- rainbow(max(k_model$cluster))
+shape <- c(19,17,15, 8,23,19,17,15, 8,23)
+
+
+
+mem_cut = mean(cluster_mins$members) - sd(cluster_mins$members)
+par(mai = c(0.75, 0.75, 0.1, 0.1))
+par(mfrow = c(2,3), xpd = TRUE)
+for(hydrogen in seq(400,950,25)){
+for(helium in seq(150,400,25)){
+    if(nrow(cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]) > 0){
+    #Plot data
+    plot(data[data$h == hydrogen & data$he == helium,]$temp, data[data$h == hydrogen & data$he==helium,]$mass*0.001, col = col_pallete[k_model$cluster[which(data$h == hydrogen & data$he == helium)]],
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 2,
+       xlim = c(12600,10600), ylim=c(0.47,0.97),
+       pch = shape[k_model$cluster[which(data$h == hydrogen & data$he == helium)]], bg = col_pallete[k_model$cluster[which(data$h == hydrogen & data$he == helium)]],
+       cex = 1.3)
+    
+    #Add minimum markers
+    points(
+      x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,1], y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,2]*0.001,
+      col = "black", pch = 4, cex = 2.5, lwd = 3
+    )
+    
+    #Label markers
+   # if(nrow(cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]) > 0){
+      text(
+        x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,1], 
+        y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,2]*0.001 + 0.05,
+        labels = paste("S=",cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]$s),
+        cex = 1.5
+      )
+  #  }
+    
+    #Labels
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    text(12200, 0.97, expression("log(M"["H"]*") ="), cex = 2)
+    text(11800, 0.972, sprintf("%1.2f",hydrogen*-0.01), cex = 2)
+    text(12200, 0.47, expression("log(M"["He"]*") ="), cex = 2)
+    text(11800, 0.472, sprintf("%1.2f",helium*-0.01), cex = 2)
+}
+}
+}
+  #Add legend to last graph
+  #legend("bottomright", legend = c("-1.5","-2.0", "-2.5", "-3.0", "-3.5", "-4.0"), cex =2, col = col_pallete, pch =shape, pt.bg = col_pallete, title = expression("log(M"["He"]*")"))
+
+
+```
+
+
+
+
+```{r, echo=FALSE, eval=FALSE}
+data$family <- NA
+if(!("ID" %in% colnames(data) )){
+data <- cbind(ID = 1:nrow(data), data)
+}
+
+for(i in 1:nrow(scaled_data)){
+  if(typeof(scaled_data$V1[i]) != "integer"){
+    print(i)
+  }
+}
+
+
+
+for(hydrogen in seq(400,950,25)){
+  print(hydrogen)
+for(helium in seq(150,400,25)){
+  fam <- 0
+  temp <- data[data$h==hydrogen & data$he == helium,]
+  for(ID in data[data$h==hydrogen & data$he == helium,]$ID){
+    if(is.na(data[data$h==hydrogen & data$he == helium,]$family[ID])){
+      min <- 1000000
+      minID <- 0
+      #is_match = FALSE
+      modes = as.numeric(scaled_data[ID,])
+      fitting_modes = as.numeric(scaled_data[ID,])
+      for(subID in temp$ID){
+        if(subID != ID){
+          #MATCHING - get fit_param
+          fiting_modes = as.numeric(scaled_data[subID,])
+          fit_param = 0
+          for(i in 1:length(fitting_modes)){
+            fit_param = fit_param + (abs(modes[i] - fitting_modes[i]))
+          }
+          
+          #identify minimum
+          if(fit_param < min){
+            min = fit_param
+            minID = subID
+          }
+        }
+      }
+              
+      #IF MIN is below amount, then its a match
+      if(min < 10){
+        #If matching model has no family AND there's a match
+        if(is.na(data$family[minID])){
+          fam=fam+1
+          data$family[ID] = fam
+          data$family[minID] = fam
+        } #or else make it the same as the matching
+        else{
+          data$family[ID] = data$family[minID]
+        }
+      }
+      else{
+        fam = fam + 1
+        data$family[ID] = fam
+      }
+    
+
+    }
+    
+  }
+  
+  
+}
+}
+
+
+```
+
+
+
+
+```{r,echo = FALSE, fig.width = 15, fig.height = 10, eval=FALSE}
+  #Make plot for each hydrogen level
+
+
+col_pallete <- rainbow(10)
+shape <- c(19,17,15, 8,23,19,17,15, 8,23)
+
+mem_cut = mean(cluster_mins$members) - sd(cluster_mins$members)
+par(mai = c(0.75, 0.75, 0.1, 0.1))
+par(mfrow = c(2,3), xpd = TRUE)
+for(hydrogen in seq(400,950,25)){
+for(helium in seq(150,400,25)){
+    if(nrow(cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]) > 0){
+    #Plot data
+    plot(data[data$h == hydrogen & data$he == helium,]$temp, data[data$h == hydrogen & data$he==helium,]$mass*0.001, col = col_pallete[data[data$h == hydrogen & data$he==helium,]$family],
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 2,
+       xlim = c(12600,10600), ylim=c(0.47,0.97),
+       pch = 19,
+       #pch = shape[data[data$h == hydrogen & data$he==helium,]$family], bg = col_pallete[data[data$h == hydrogen & data$he==helium,]$family],
+       cex = 1.3)
+    
+    #Add minimum markers
+    points(
+      x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,1], y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,2]*0.001,
+      col = "black", pch = 4, cex = 2.5, lwd = 3
+    )
+    
+    #Label markers
+   # if(nrow(cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]) > 0){
+      text(
+        x = cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,1], 
+        y= cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,][,2]*0.001 + 0.05,
+        labels = paste("S=",cluster_mins[cluster_mins$h == hydrogen & cluster_mins$he == helium  & cluster_mins$s < s_cut & cluster_mins$members > mem_cut,]$s),
+        cex = 1.5
+      )
+  #  }
+    
+    #Labels
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    text(12200, 0.97, expression("log(M"["H"]*") ="), cex = 2)
+    text(11800, 0.972, sprintf("%1.2f",hydrogen*-0.01), cex = 2)
+    text(12200, 0.47, expression("log(M"["He"]*") ="), cex = 2)
+    text(11800, 0.472, sprintf("%1.2f",helium*-0.01), cex = 2)
+}
+}
+}
+  #Add legend to last graph
+  #legend("bottomright", legend = c("-1.5","-2.0", "-2.5", "-3.0", "-3.5", "-4.0"), cex =2, col = col_pallete, pch =shape, pt.bg = col_pallete, title = expression("log(M"["He"]*")"))
+
+
+```
+
+
+
+
+
+```{r, echo=FALSE}
+data$familyn <- NA
+if(!("ID" %in% colnames(data) )){
+data <- cbind(ID = 1:nrow(data), data)
+}
+k_val = 10
+
+for(hydrogen in seq(400,950,25)){
+    #print(hydrogen)
+  for(helium in seq(150,400,25)){
+    fam <- 0
+    #temp <- data[data$h==hydrogen & data$he == helium,]
+    temp <- scaled_data[which(data$h==hydrogen & data$he == helium),]
+    use_k <- k_val
+    if(use_k > nrow(temp[!duplicated(temp), ])){
+      use_k <- nrow(temp[!duplicated(temp),])
+    }
+    k_model <- kmeans(scaled_data[which(data$h==hydrogen & data$he == helium),], use_k, iter.max = 400)
+    #k_model <- kmeanspp(scaled_data[which(data$h==hydrogen & data$he == helium),], k_val)
+    data[data$h == hydrogen & data$he == helium,]$familyn = k_model$cluster
+  }
+}
+
+
+new_cluster_mins = data.frame(matrix(NA, nrow = 60, ncol = 6))
+colnames(new_cluster_mins) <- c("temp", "mass", "he","h","s", "members")
+
+minimums <- rep(0, 60)
+
+# if(!("group" %in% colnames(data) )){
+#   group <- rep(0,nrow(data))
+#   data <- cbind(data, group)
+# }
+
+g <- 1
+legendlabels <- data.frame(matrix(NA, nrow = 53, ncol = 2))
+i=1
+for(hydrogen in seq(400,950,25)){
+  #print(hydrogen)
+  for(helium in seq(150,400,25)){
+    for(j in 1:max(data$familyn)){
+      test_data = data[data$h == hydrogen & data$he == helium & data$familyn == j, ]
+      test_data = test_data[c(-1,-7,-8,-9)]
+      if(nrow(test_data) > 0){
+        min_idx <- which.min(test_data$s)
+        new_cluster_mins[i,] <- c(test_data[min_idx,1:5], nrow(test_data))
+        #suppressWarnings(data[rownames(test_data),]$group <- g)
+        legendlabels[g,] <- c(toString(hydrogen * 0.01), toString(helium * 0.01))
+        g <- g+1
+      }
+      i = i+1
+    }
+  }
+}
+#print(nrow(new_cluster_mins))
+new_cluster_mins <- new_cluster_mins[is.na(new_cluster_mins$temp) == FALSE,]
+new_cluster_mins <- new_cluster_mins[order(new_cluster_mins$s),]
+#print(nrow(new_cluster_mins))
+
+write.csv(new_cluster_mins, file="cluster_mins.csv")
+
+```
+
+
+```{r, echo= FALSE, fig.width = 15, fig.height = 10}
+
+#############PLOTTING####################
+
+col_pallete <- rainbow(max(data$familyn))
+shape <- c(19,17,15, 8,23,19,17,15, 8,23)
+
+mem_cut = mean(new_cluster_mins$members) - sd(new_cluster_mins$members)
+par(mai = c(0.75, 0.75, 0.1, 0.1))
+par(mfrow = c(2,3), xpd = TRUE)
+for(hydrogen in seq(400,950,25)){
+for(helium in seq(150,400,25)){
+    if(nrow(new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium,]) > 0){
+      plotting_data <- data[data$h == hydrogen & data$he==helium,]
+    #Plot data
+    plot(plotting_data$temp, plotting_data$mass*0.001,
+       col = col_pallete[plotting_data$familyn],
+       #col = 'red',
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 2,
+       xlim = c(12600,10600), ylim=c(0.47,0.97),
+       #pch = 19,
+       pch = shape[plotting_data$familyn], bg = col_pallete[plotting_data$familyn],
+       cex = 1.3)
+    
+    #Add minimum markers
+    if(nrow(new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]) > 0){
+    points(
+      x = new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,1], y= new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,2]*0.001,
+      col = "black", pch = 4, cex = 2.5, lwd = 3
+    )
+      
+    
+    #Label markers
+    if(nrow(new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]) > 0){
+      text(
+        x = new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,1], 
+        y= new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,2]*0.001 + 0.05,
+        labels = paste("S=",new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]$s),
+        cex = 1.5
+      )
+    }
+    }
+    
+    #Labels
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    text(12200, 0.97, expression("log(M"["H"]*") ="), cex = 2)
+    text(11800, 0.972, sprintf("%1.2f",hydrogen*-0.01), cex = 2)
+    text(12200, 0.47, expression("log(M"["He"]*") ="), cex = 2)
+    text(11800, 0.472, sprintf("%1.2f",helium*-0.01), cex = 2)
+}
+}
+}
+
+```
+
+
+```{r, echo = FALSE, fig.width = 10, fig.height = 5}
+par(mai = c(1, 1, 0.1, 0.1))
+
+par(mfrow = c(1,2), xpd = TRUE)
+
+hydrogen = 600
+#helium = 250
+for(helium in c(150,250)){
+plotting_data <- data[data$h == hydrogen & data$he==helium,]
+    #Plot data
+    plot(plotting_data$temp, plotting_data$mass*0.001,
+       col = col_pallete[plotting_data$familyn],
+       #col = 'red',
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 1.5,
+       xlim = c(12600,10600), ylim=c(0.47,0.97),
+       #pch = 19,
+       pch = shape[plotting_data$familyn], bg = col_pallete[plotting_data$familyn],
+       cex = 0.8)
+    
+    #Add minimum markers
+    # if(nrow(new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]) > 0){
+    # points(
+    #   x = new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,1], y= new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,2]*0.001,
+    #   col = "black", pch = 4, cex = 1.5, lwd = 3
+    # )
+    
+      
+    
+    #Label markers
+      # text(
+      #   x = new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,1], 
+      #   y= new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,2]*0.001 + 0.05,
+      #   labels = paste("S=",new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]$s),
+      #   cex = 1.5
+      # )
+    # }
+        #Labels
+    axis(2,cex.axis=1)
+    axis(1,cex.axis=1)
+    text(12200, 0.97, expression("-log(M"["H"]*") ="), cex = 1)
+    text(11850, 0.972, sprintf("%1.2f",hydrogen*0.01), cex = 1)
+    text(11200, 0.97, expression("-log(M"["He"]*") ="), cex = 1)
+    text(10850, 0.972, sprintf("%1.2f",helium*0.01), cex = 1)
+}
+
+
+```
+

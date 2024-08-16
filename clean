@@ -1,0 +1,5 @@
+#!/bin/bash
+rm output
+rm modecs*
+rm mincode/*output*
+rm ajusteh

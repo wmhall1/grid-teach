@@ -1,0 +1,329 @@
+---
+title: "families"
+author: "Weston Hall"
+date: "3/6/2022"
+output: html_document
+---
+
+```{r, include = FALSE}
+
+library(rgl)
+#library(plot3D)
+#library(scatterplot3d)
+library(viridis)
+library(cluster)
+library(factoextra)
+library(stringr)
+library(factoextra)
+library(NbClust)
+library(dplyr)
+setwd("~/grid05-24/mincode/cluster")
+
+
+```
+
+```{r,echo = FALSE}
+#####READING DATA AND SCALING###################
+data <- read.table('../minoutput2', sep=';', colClasses=c("integer","integer", "integer", "integer", "numeric","character"))
+#data <- data[-3]
+k_data <- data[-5]
+
+colnames(data) <- c("temp", "mass", "he","h","s", "modes")
+
+test<- data$modes[1]
+test_split <- strsplit(test,"  ")[[1]]
+test_split <- test_split[test_split!=""]
+str_sub(test_split[1],-4, -3)
+mode_mat<-matrix(NA,nrow = nrow(data), ncol=length(test_split),byrow=TRUE)
+
+for(i in 1:nrow(data)){
+  test <- data$modes[i]
+  test_split <- strsplit(test, "  ")[[1]]
+  test_split <- test_split[test_split!=""]
+  for(n in 1:length(test_split)-1){
+    test_split[n] = str_sub(test_split[n],-4,-3)
+  }
+  test_split[length(test_split)] = str_sub(test_split[length(test_split)], -3,-2)
+  mode_mat[i,] = test_split
+}
+
+scaled_data <- as.data.frame(mode_mat)
+
+
+```
+
+
+```{r,echo = FALSE, fig.width = 10, fig.height = 15}
+par(mai = c(0.75, 0.75, 0.1, 0.1))
+par(mfrow = c(3,2), xpd = TRUE)
+for(hydrogen in seq(400,950,25)){
+for(helium in seq(150,400,25)){
+  temp_modes <- scaled_data[data$he==helium & data$h==hydrogen,]
+  #print(nrow(temp_modes))
+
+
+maximum <- nrow(temp_modes[!duplicated(temp_modes), ])
+
+if(maximum > 20){
+  maximum =20
+}
+
+k_value = c(2:maximum)
+distortions = c(2:maximum)
+
+if(maximum < 10){
+  print(hydrogen)
+  print(helium)
+}
+
+for (k in k_value){
+  fit <- kmeans(temp_modes, k)
+  distortions[k - 1] <- fit$tot.withinss
+}
+
+plot(k_value, distortions,
+     ylab = "WSS Score", xlab = "K Value")
+abline(v = k_val, col = "red")
+
+BIC <- c(2:20)
+d <- 8
+n <- 300
+
+for(k in k_value){
+  BIC[k-1] <- distortions[k-1] + (k - 1 + k * d) * log(n)
+}
+
+plot(k_value, BIC,
+     xlab = "K Value", ylab = "BIC")
+
+}
+}
+
+
+
+
+
+```
+
+
+
+```{r, echo= FALSE}
+
+cluster_mins = data.frame(matrix(NA, nrow = 60, ncol = 6))
+colnames(cluster_mins) <- c("temp", "mass", "he","h","s", "members")
+
+minimums <- rep(0, 60)
+
+# group <- rep(0,nrow(data))
+# data <- cbind(data, group)
+g <- 1
+legendlabels <- data.frame(matrix(NA, nrow = 53, ncol = 2))
+i=1
+for(hydrogen in seq(400,950,25)){
+  for(helium in seq(150,400,25)){
+    test_data = data[data$h == hydrogen & data$he == helium, ]
+    if(nrow(test_data) > 0){
+      min_idx <- which.min(test_data$s)
+      cluster_mins[i,] <- c(test_data[min_idx,1:5], nrow(test_data))
+      #suppressWarnings(data[rownames(test_data),]$group <- g)
+      legendlabels[g,] <- c(toString(hydrogen * 0.01), toString(helium * 0.01))
+      g <- g+1
+    }
+    i = i+1
+  }
+}
+cluster_mins <- cluster_mins[is.na(cluster_mins$temp) == FALSE,]
+cluster_mins <- cluster_mins[order(cluster_mins$s),]
+
+
+```
+
+
+
+```{r, echo=FALSE}
+data$familyn <- NA
+if(!("ID" %in% colnames(data) )){
+data <- cbind(ID = 1:nrow(data), data)
+}
+k_val = 2
+
+for(hydrogen in seq(400,950,25)){
+    #print(hydrogen)
+  for(helium in seq(150,400,25)){
+    fam <- 0
+    #temp <- data[data$h==hydrogen & data$he == helium,]
+    temp <- scaled_data[which(data$h==hydrogen & data$he == helium),]
+    use_k <- k_val
+    if(use_k > nrow(temp[!duplicated(temp), ])){
+      use_k <- nrow(temp[!duplicated(temp),])
+    }
+    k_model <- kmeans(scaled_data[which(data$h==hydrogen & data$he == helium),], use_k, iter.max = 400)
+    #k_model <- kmeanspp(scaled_data[which(data$h==hydrogen & data$he == helium),], k_val)
+    data[data$h == hydrogen & data$he == helium,]$familyn = k_model$cluster
+  }
+}
+
+
+new_cluster_mins = data.frame(matrix(NA, nrow = 60, ncol = 6))
+colnames(new_cluster_mins) <- c("temp", "mass", "he","h","s", "members")
+
+minimums <- rep(0, 60)
+
+# if(!("group" %in% colnames(data) )){
+#   group <- rep(0,nrow(data))
+#   data <- cbind(data, group)
+# }
+
+g <- 1
+legendlabels <- data.frame(matrix(NA, nrow = 53, ncol = 2))
+i=1
+for(hydrogen in seq(400,950,25)){
+  #print(hydrogen)
+  for(helium in seq(150,400,25)){
+    for(j in 1:max(data$familyn)){
+      test_data = data[data$h == hydrogen & data$he == helium & data$familyn == j, ]
+      test_data = test_data[c(-1,-7,-8,-9)]
+      if(nrow(test_data) > 0){
+        min_idx <- which.min(test_data$s)
+        new_cluster_mins[i,] <- c(test_data[min_idx,1:5], nrow(test_data))
+        #suppressWarnings(data[rownames(test_data),]$group <- g)
+        legendlabels[g,] <- c(toString(hydrogen * 0.01), toString(helium * 0.01))
+        g <- g+1
+      }
+      i = i+1
+    }
+  }
+}
+#print(nrow(new_cluster_mins))
+new_cluster_mins <- new_cluster_mins[is.na(new_cluster_mins$temp) == FALSE,]
+new_cluster_mins <- new_cluster_mins[order(new_cluster_mins$s),]
+#print(nrow(new_cluster_mins))
+
+write.csv(new_cluster_mins, file="cluster_mins.csv")
+
+```
+
+
+```{r, echo= FALSE, fig.width = 15, fig.height = 10}
+
+#############PLOTTING####################
+
+col_pallete <- rainbow(max(data$familyn))
+shape <- c(19,17,15, 8,23,19,17,15, 8,23)
+
+mem_cut = mean(new_cluster_mins$members) - sd(new_cluster_mins$members)
+par(mai = c(0.75, 0.75, 0.1, 0.1))
+par(mfrow = c(2,3), xpd = TRUE)
+for(hydrogen in seq(400,950,25)){
+for(helium in seq(150,400,25)){
+    if(nrow(new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium,]) > 0){
+      plotting_data <- data[data$h == hydrogen & data$he==helium,]
+    #Plot data
+    plot(plotting_data$temp, plotting_data$mass*0.001,
+       col = col_pallete[plotting_data$familyn],
+       #col = 'red',
+       xaxt = 'n', yaxt= 'n', 
+       xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 2,
+       xlim = c(12600,10600), ylim=c(0.47,0.97),
+       #pch = 19,
+       pch = shape[plotting_data$familyn], bg = col_pallete[plotting_data$familyn],
+       cex = 1.3)
+    
+    #Add minimum markers
+    if(nrow(new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]) > 0){
+    points(
+      x = new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,1], y= new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,2]*0.001,
+      col = "black", pch = 4, cex = 2.5, lwd = 3
+    )
+      
+    
+    #Label markers
+    if(nrow(new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]) > 0){
+      text(
+        x = new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,1], 
+        y= new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,][,2]*0.001 + 0.05,
+        labels = paste("S=",new_cluster_mins[new_cluster_mins$h == hydrogen & new_cluster_mins$he == helium  & new_cluster_mins$s < s_cut & new_cluster_mins$members > mem_cut,]$s),
+        cex = 1.5
+      )
+    }
+    }
+    
+    #Labels
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    text(12200, 0.97, expression("log(M"["H"]*") ="), cex = 2)
+    text(11800, 0.972, sprintf("%1.2f",hydrogen*-0.01), cex = 2)
+    text(12200, 0.47, expression("log(M"["He"]*") ="), cex = 2)
+    text(11800, 0.472, sprintf("%1.2f",helium*-0.01), cex = 2)
+}
+}
+}
+
+```
+
+
+```{r, fig.width = 15, fig.height = 5}
+
+# 
+# for(hydrogen in seq(400,950,25)){
+# for(helium in seq(150,400,25)){
+#   model=fviz_nbclust(scaled_data[data$he==helium & data$h==hydrogen,], kmeans, method = "wss")
+# }
+# }
+
+# n_clust<- fviz_nbclust(scaled_data[which(data$h==hydrogen & data$he == helium),], kmeans, method = "wss", k.max = 20)
+# 
+# n_clust<-n_clust$data
+# max_cluster<-as.numeric(n_clust$clusters[which.max(n_clust$y)])
+# # 
+# # fviz_nbclust(scaled_data[which(data$h==hydrogen & data$he == helium),], kmeans, nstart = 25,  method = "gap_stat", nboot = 50)+
+# #   labs(subtitle = "Gap statistic method")
+# 
+# hydrogen = 600
+# helium=200
+# 
+# df<- mutate_all(scaled_data[data$he==helium & data$h==hydrogen,], function(x) as.numeric(x))
+# nb <- NbClust(df, distance = "euclidean", min.nc = 2,
+#         max.nc = 20, method = "kmeans")
+# model<-fviz_nbclust(nb)
+# model
+######################
+par(mfrow = c(1,3), xpd = TRUE)
+
+hydrogen = 600
+helium=200
+
+temp_modes <- scaled_data[data$he==helium & data$h==hydrogen,]
+maximum <- nrow(temp_modes[!duplicated(temp_modes), ])
+
+k_value = c(2:maximum)
+distortions = c(2:maximum)
+BIC <- c(2:maximum)
+d <- ncol(scaled_data)
+n <- 300
+
+
+for (k in k_value){
+  fit <- kmeans(temp_modes, k)
+  distortions[k - 1] <- fit$tot.withinss
+  BIC[k-1] <- distortions[k-1] + (k - 1 + k * d) * log(n)
+}
+
+plot(k_value, distortions,
+     ylab = "WSS Score", xlab = "K Value")
+#abline(v = k_val, col = "red")
+
+plot(k_value, BIC,
+     xlab = "K Value", ylab = "BIC")
+
+col_pallete <- rainbow(10)
+shape <- c(19,17,15, 8,23,19,17,15, 8,23)
+
+plot(data[data$h == hydrogen & data$he == helium,]$temp, data[data$h == hydrogen & data$he==helium,]$mass*0.001, col = 'red',
+   xaxt = 'n', yaxt= 'n', 
+   xlab ='Temperature (K)', ylab = expression("Mass (M"["\u2609"]*")"), cex.lab = 2,
+   xlim = c(12600,10600), ylim=c(0.47,0.97),
+   pch = 19)
+
+
+```
