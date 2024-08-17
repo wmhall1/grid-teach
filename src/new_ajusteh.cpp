@@ -71,8 +71,9 @@ int main(int argc, char *argv[]){
     string run;
 
     //Here is the arrays declared:
-    double modec[100]={0},dif[200]={0},modecs[200]={1},llcs[200]={0},prob=0, ll[100]={0}, smin=1000000.0;
-    int ks[100] = {0};
+    //08/16/24 Moved to after calcperiods counting
+    //double modec[100]={0},dif[200]={0},modecs[200]={1},llcs[200]={0},prob=0, ll[100]={0}, smin=1000000.0;
+    //int ks[100] = {0};
 
     //Variables to count num stars in concatenated file.
     double doubrun;
@@ -125,15 +126,31 @@ int main(int argc, char *argv[]){
     }
     
     //This part counts num stars in grid
+    //08/16/24 And gets the max size of cacluated arrays
+    int num_modes = 100;
+    int cnt = 0;
     while(!calcperiods.eof()){
         getline(calcperiods,run);
         if(run.substr(0,3) == "  1"){
             starcount++;
+	    cnt = 0;
         }
+	cnt++;
+	if(run.substr(0,15) == "   0.0000000000")
+	    if(cnt > num_modes){
+		    num_modes = cnt;
+	    }
     }
     calcperiods.close();
     calcperiods.clear();
     calcperiods.open(calcpname);
+    
+    //Declare calcualted mode arrays
+    if(debug){cout << "Largest model has " << num_modes << " modes." << endl;}
+    double modec[num_modes]={0},dif[num_modes]={0},modecs[num_modes]={1},llcs[num_modes]={0},prob=0, ll[num_modes]={0}, smin=1000000.0;
+    int ks[num_modes] = {0};
+
+    
     if(debug){cout << "num of stars in grid = " << starcount << endl;}
     
     //Lets get the np (number of periods) from the file by reading 
@@ -207,7 +224,7 @@ int main(int argc, char *argv[]){
         do{                //Read in ll and modec for particular model
             calcperiods >> ll[i] >> modec[i];
             i++;
-        }while(ll[i-1] != 0 && i < 100);			///8/16/24 Sanity Check
+        }while(ll[i-1] != 0 && i < num_modes);			///8/16/24 Sanity Check
 
         ii = i-1;            //Get total number of periods
         
@@ -399,7 +416,7 @@ int main(int argc, char *argv[]){
 	//newcalcp.close();
     
     //more debug output
-    if(debug){for(int i=0;i<300;i++){cout << modecs[i] << endl;}}
+    if(debug){for(int i=0;i<num_modes;i++){cout << modecs[i] << endl;}}
     if(debug){cout << endl << "np is " << np << endl << endl;}
     if(debug){cout << "Files closed." << endl << run << endl;doutput.close();}
     if(debug && d9000){cout << "disabled" << endl;}
