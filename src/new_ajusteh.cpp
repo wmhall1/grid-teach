@@ -41,7 +41,6 @@
  *
  *  Limitations:
  *   -Proper formatting of input required.
- *   -Maximum of 100 periods per star
  *
  *  Bash usage:
  *   -Can be used in bash scripts with format:
