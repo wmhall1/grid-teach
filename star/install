@@ -1,5 +1,0 @@
-#!/bin/bash
-chmod +x dothing
-chmod +x K2/run
-chmod +x run
-g++ ../src/starmaker_noweight.cpp -o starmaker

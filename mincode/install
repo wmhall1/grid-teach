@@ -1,3 +1,0 @@
-#!/bin/bash
-g++ ../src/cutoff.cpp -o cutoff
-chmod +x clean
