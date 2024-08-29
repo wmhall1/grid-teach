@@ -8,6 +8,7 @@ DIRS= star mincode converge
 binaries= ajusteh star/starmaker mincode/cutoff converge/counter converge/plotting/finder converge/plotting/mfinder
 
 all: ajusteh $(DIRS) tools
+bin: $(binaries)
 
 .PHONY: clean
 clean:
