@@ -36,8 +36,8 @@ These codes were designed to take user input sometimes, and file inputs other ti
 
 To compare your calculated periods to an observed star, the observed star's periods must be in this directory or in the star/ directory. A provided code, "starmaker" can assist in creating the files. They are formatted as such:
 
-<Period> <Weight>
-<Period> <Weight>
+\<Period\> \<Weight\>
+\<Period\> \<Weight\>
 ... ...
 
 For example: G117-B15A
@@ -54,7 +54,7 @@ To compare a star to the grid, run "./ajusteh" and provide the necessary inputs.
 
 "outputper": Displays the model and matching model period and l for the observed star periods, for all models, including those not 1-1. Each model will have the number of lines correlating to the number of observed periods. If there periods on two lines are identical, then the model is not 1-1.
 
-"modecs": Contains the model information for the 1-1 models that matched, formatted as <Model Period>(l, n) where n is the period number from the model.
+"modecs": Contains the model information for the 1-1 models that matched, formatted as \<Model Period\>(l, n) where n is the period number from the model.
 
 Ajusteh also outputs a "secret" file: "minoutput" inside the mincode directory. Minoutput is just output but any model with an S value above the number of observed periods is eliminated. This file is overwritten by our next step, so it is unimportant. It has also deprecated, so it may not output correctly and I have no plans to fix that. Use at your own risk.
 
