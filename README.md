@@ -36,14 +36,15 @@ These codes were designed to take user input sometimes, and file inputs other ti
 
 To compare your calculated periods to an observed star, the observed star's periods must be in this directory or in the star/ directory. A provided code, "starmaker" can assist in creating the files. They are formatted as such:
 
-\<Period\> \<Weight\>
-\<Period\> \<Weight\>
+\<Period\> \<Weight\>\n
+\<Period\> \<Weight\>\n
 ... ...
 
 For example: G117-B15A
-215.197 0.01
-270.455 1
-304.052 1
+
+215.197 0.01\n
+270.455 1\n
+304.052 1\n
 
 Several stars are already provided, most of them are weighted by their observational uncertainty.
 
