@@ -62,7 +62,7 @@ compare_K2:
 .PHONY: tools
 tools:
 	$(SHX) clean
-	$(SHX) getcalc
+	#$(SHX) getcalc
 	#$(SHX) make_outputs
 	$(SHX) runfinish
 	$(SHX) runorig_k2
