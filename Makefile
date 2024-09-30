@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-I.
+CFLAGS=-std=c++11 -I.
 SHX=chmod +x
 
 VPATH = src
@@ -15,20 +15,20 @@ clean:
 	rm -f $(binaries)
 
 ajusteh: new_ajusteh.cpp
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 star/starmaker: starmaker_noweight.cpp
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 mincode/cutoff: cutoff.cpp
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 converge/counter: count.cpp
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 converge/plotting/finder: converge/plotting/finder.cpp
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 converge/plotting/mfinder: converge/plotting/mfinder.cpp
-	$(CC) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^
 
 
 .PHONY: star
