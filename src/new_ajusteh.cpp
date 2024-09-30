@@ -146,9 +146,18 @@ int main(int argc, char *argv[]){
     
     //Declare calcualted mode arrays
     if(debug){cout << "Largest model has " << num_modes << " modes." << endl;}
-    double modec[num_modes]={0},dif[num_modes]={0},modecs[num_modes]={1},llcs[num_modes]={0},prob=0, ll[num_modes]={0}, smin=1000000.0;
-    int ks[num_modes] = {0};
-
+    double modec[num_modes],dif[num_modes],modecs[num_modes],llcs[num_modes],prob=0, ll[num_modes], smin=1000000.0;
+    int ks[num_modes];
+    
+    //Initialization
+    for(int i=0;i<num_modes;i++){
+	modec[i] = 0;
+        dif[i]=0;
+        modecs[i]=1;
+	llcs[i]=0;
+	ll[i]=0;
+	ks[i]=0;
+    }
     
     if(debug){cout << "num of stars in grid = " << starcount << endl;}
     
@@ -163,11 +172,18 @@ int main(int argc, char *argv[]){
     if(debug){cout <<"np detected = " <<  np << endl << "debug mode: manually set np = "; cin >> np;}
     
     //Declare arrays with observed sizes
-    double modeo[np] = {0};     //Observed Modes
-    double sigmao[np] = {0};    //Observed sigmas
-    double w[np] = {0};         //weights for modes
-    double limposed[np] = {0};  //ell's given by user
-
+    double modeo[np];     //Observed Modes
+    double sigmao[np];    //Observed sigmas
+    double w[np];         //weights for modes
+    double limposed[np];  //ell's given by user
+	
+    // Initialization
+    for(int i; i<np; i++){
+	modeo[i]=0;
+	sigmao[i]=0;
+	w[i]=0;
+	limposed[i]=0;
+    }
     //Read in modeo and sigmao from period file
     for(int i = 0; i < np; i++){
         periodlist >> modeo[i] >> sigmao[i];
