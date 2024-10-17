@@ -1,8 +1,23 @@
+'''
+Author: Weston Hall
+
+These are functions that are used in some of the other plotting routines
+in this directory.
+'''
+
 import math
 import pandas as pd
 import numpy as np
 
 
+#
+#Flattens a pandas DataFrame to 3 arrays temps/masses/sigmas for ease of plotting
+#
+# Inputs : pandas dataframe containing data from minoutput,
+#           example: pd.read_table("../minoutput",sep = "   |    |\t", header = None, names = cols, usecols = [0,1,3,4,5],dtype={'temp':float},engine="python")
+#
+# Outputs : A list of lists containing [temps, masses, sigmas]
+#
 def get_plots(data):
     
     #get minimum sigma and index
@@ -60,6 +75,13 @@ def get_plots(data):
 
     return [temps, masses, sigma_mins]
 
+#
+# Calculates the internal uncertainty on a point
+#
+# Inputs : pandas data and the index to calculate uncertainty at
+#
+# Outputs : List containing upper and lower errors [[temperature lower, temperature upper], [ mass lower, mass upper] ]
+#
 def get_unc(data, min_index):
     """ Calcualte Sigma error """
 
@@ -84,7 +106,9 @@ def get_unc(data, min_index):
     int_mass_err = [[int_s_mass_do], [int_s_mass_up]]
 
     return [int_temp_err, int_mass_err]
-
+#
+# Same as above but for H and He instead of temp mass
+#
 def get_layer_unc(data, min_index):
     """ Calcualte Sigma error """
 
