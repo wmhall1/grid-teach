@@ -53,8 +53,9 @@ elif selection == "Splitting" or selection == "3":
 else:
     alt = True
 '''
-
-#Get user input for what levels to plot from and retrieve that data from the DataFrame
+#
+# Get user input for what levels to plot from and retrieve that data from the DataFrame
+#
 print("Hydrogen Level", min(data.hydrogen), "to", max(data.hydrogen), ":")
 hydro = input()
 data = data.loc[data['hydrogen'] == float(hydro)]
@@ -64,7 +65,9 @@ hyd = True
 he_1 = input("Helium 1: ")
 he_2 = input("Helium 2: ")
 
-#Retrieve data
+#
+# Retrieve data
+#
 data_1 = data.loc[data['helium'] == float(he_1)]
 data_1 = data_1.reset_index()
 
@@ -75,7 +78,9 @@ data_3 = data.loc[data['helium'] != float(he_1)]
 data_3 = data_3.loc[data['helium'] != float(he_2)]
 data_3 = data_3.reset_index()
 
-#Calculate minimum sigma and find its location
+#
+# Calculate minimum sigma and find its location
+#
 min_value_1 = min(data_1.sigma)
 sigmas_1 = data_1.sigma.tolist()
 min_index_1 = sigmas_1.index(min_value_1)
@@ -84,7 +89,9 @@ min_value_2 = min(data_2.sigma)
 sigmas_2 = data_2.sigma.tolist()
 min_index_2 = sigmas_2.index(min_value_2)
 
+#
 #Flatten the data for plotting, acquire uncertainties for minimums
+#
 [temps1, masses1, sigma_mins1] = get_plots(data_1)
 [temps2, masses2, sigma_mins2] = get_plots(data_2)
 [int_temp_err_1, int_mass_err_1] = get_unc(data_1, min_index_1)
@@ -122,7 +129,9 @@ color_map2 = plt.cm.get_cmap('autumn_r')
 
 color_map3 = plt.cm.get_cmap('binary_r')
 
+#
 #Plot settings
+#
 plt.rc('font', size=12)          # controls default text sizes
 plt.rc('axes', titlesize=12)     # fontsize of the axes title
 plt.rc('axes', labelsize=14)    # fontsize of the x and y labels
@@ -136,19 +145,25 @@ s_val = 40
 #Initialize
 plt.figure(100, figsize=(8,6))
 
+#
 #Scatter the background in grey
+#
 pc = plt.scatter(temps3,masses3,cmap = color_map3, c=sigma_mins3,s=s_val, marker =path)
 #cbc = plt.colorbar(pc)
 plt.clim(0,max_S)
 
-#Scatter the first choice in blue
+#
+# Scatter the first choice in blue
+#
 pa = plt.scatter(temps1,masses1,cmap = color_map,  c=sigma_mins1, s=s_val, marker=path)
 cba = plt.colorbar(pa)
 plt.clim(0,max_S)
 cba.set_label("S Value for $-log(M_{He})=$"+str(float(he_1)/100), fontsize = 15)
 #cba.ax.tick_params(labelsize=10)
 
-#Scatter the second choice in red
+#
+# Scatter the second choice in red
+#
 pb = plt.scatter(temps2,masses2,cmap = color_map2, c=sigma_mins2, s=s_val, marker=path)
 cbb = plt.colorbar(pb)
 plt.clim(0,max_S)
