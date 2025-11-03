@@ -4,6 +4,8 @@ import argparse
 import numpy as np
 import pandas as pd
 from math import sqrt
+from csv import DictWriter
+
 try:
     from scipy.optimize import linear_sum_assignment
     SCIPY_AVAILABLE = True
@@ -15,50 +17,45 @@ except ImportError:
 PARAM_NAMES = [
     "temp", "mass", "menv", "mhe", "mh", "Xhebar",
     "alph1", "alph2", "alpha", "h1", "h2", "h3",
-    "w1", "w2", "w3", "w4"
+    "w1", "w2", "w3", "w4"  # ← DELETE w4 if using Agnes grid
 ]
 
 
-# ---- File parsers ----
-def parse_model_file(filename):
-    """Parse a model file into a list of dicts with parameters and mode data."""
-    models = []
+# ---- Streaming model parser ----
+def stream_models(filename):
+    """
+    Generator yielding one model at a time from the file.
+    Reads line-by-line to avoid loading the whole file.
+    """
+    num = len(PARAM_NAMES)
+    pattern = rf"^(\s*-?\d+(\.\d+)?\s+){{{num-1}}}-?\d+(\.\d+)?$"
+
     with open(filename, "r") as f:
-        lines = f.readlines()
+        params = None
+        modes_by_l = {}
 
-    i = 0
-    while i < len(lines):
-        line = lines[i].strip()
-        # Detect 16-parameter header line
-        if re.match(r"^(\s*-?\d+(\.\d+)?\s+){15}-?\d+(\.\d+)?", line):
-            params = list(map(float, line.split()))
-            l_modes = []
-            i += 1
-            # Read subsequent lines of modes until blank or separator
-            while i < len(lines):
-                lline = lines[i].strip()
-                if not lline or lline.startswith("0.0") or lline.startswith("100000"):
-                    break
-                parts = lline.split()
+        for line in f:
+            line = line.strip()
+            # Detect header (num parameters)
+            if re.match(pattern, line):
+                if params is not None:
+                    # yield previous model before starting new one
+                    yield {"params": params, "modes": modes_by_l}
+                values = list(map(float, line.split()))
+                params = dict(zip(PARAM_NAMES, values))
+                modes_by_l = {}
+            elif line and not line.startswith(("0.0", "100000")):
+                parts = line.split()
                 if len(parts) == 2:
-                    l_val = int(parts[0])
-                    period = float(parts[1])
-                    l_modes.append((l_val, period))
-                i += 1
-            # Store model
-            modes_by_l = {}
-            for l_val, p in l_modes:
-                modes_by_l.setdefault(l_val, []).append(p)
-            models.append({
-                "params": dict(zip(PARAM_NAMES, params)),
-                "modes": modes_by_l
-            })
-        i += 1
-        if i % 1000 == 0:
-            print(i)
-    return models
+                    l_val, period = int(parts[0]), float(parts[1])
+                    modes_by_l.setdefault(l_val, []).append(period)
+
+        # yield last model
+        if params is not None:
+            yield {"params": params, "modes": modes_by_l}
 
 
+# ---- Observed file parser ----
 def parse_observed_file(filename):
     """Parse observed periods and uncertainties."""
     periods, uncertainties = [], []
@@ -72,7 +69,7 @@ def parse_observed_file(filename):
     return np.array(periods), np.array(uncertainties)
 
 
-# ---- Core fitting function ----
+# ---- Core fitting ----
 def compute_best_fit(model, p_obs, sigma_obs, l_vals):
     """Compute best-fit S for a single model."""
     w = 1 / np.where(sigma_obs == 0, 1, sigma_obs)
@@ -88,10 +85,8 @@ def compute_best_fit(model, p_obs, sigma_obs, l_vals):
         if lw not in model["modes"]:
             return None  # cannot match this model to this obs
         model_modes = np.array(model["modes"][lw])
-
-        # Cost array (difference squared × weight)
         cost = (p - model_modes) ** 2 * w[i]
-        idx = np.argmin(cost)  # simplest one-to-one since ℓ handled separately
+        idx = np.argmin(cost)
         matched_p_model.append(model_modes[idx])
         matched_indices.append(idx)
         total_weighted_sq += cost[idx]
@@ -106,44 +101,75 @@ def compute_best_fit(model, p_obs, sigma_obs, l_vals):
     }
 
 
-# ---- Runner ----
+def is_one_to_one(fit, l_vals):
+    """
+    Check that each observed period maps uniquely to a model mode per ℓ.
+    Returns True if one-to-one, False if any duplicates exist.
+    """
+    l_to_indices = {}
+    for l, idx in zip(l_vals, fit["matched_model_mode_index"]):
+        l_to_indices.setdefault(l, []).append(idx)
+
+    # Each l group must have unique indices
+    for l, indices in l_to_indices.items():
+        if len(set(indices)) != len(indices):
+            return False
+    return True
+
+
 def run_fitting(model_file, observed_file, l_values, output_csv="fits_output.csv"):
-    models = parse_model_file(model_file)
+    """Stream models, fit each, and write results incrementally to CSV."""
     p_obs, sigma_obs = parse_observed_file(observed_file)
     l_values = np.array(l_values, dtype=int)
 
-    results = []
-    for model_index, model in enumerate(models):
-        if model_index % 1000 == 0:
-            print(f"Model number {model_index}")
-        fit = compute_best_fit(model, p_obs, sigma_obs, l_values)
-        if fit is None:
-            continue
-        row = {**model["params"]}
-        row.update({
-            "model_index": model_index,
-            "S": fit["S"],
-            "Nm": fit["Nm"]
-        })
-        for j, (po, pm, li, idx) in enumerate(
-            zip(p_obs, fit["matched_p_model"], l_values, fit["matched_model_mode_index"])
-        ):
-            row[f"matched_p_obs{j}"] = po
-            row[f"matched_p_model{j}"] = pm
-            row[f"matched_l{j}"] = li
-            row[f"matched_model_mode_index{j}"] = idx
-        results.append(row)
+    fieldnames = PARAM_NAMES + ["model_index", "S", "Nm"]
+    for j in range(len(p_obs)):
+        fieldnames += [
+            f"matched_p_obs{j}",
+            f"matched_p_model{j}",
+            f"matched_l{j}",
+            f"matched_model_mode_index{j}",
+        ]
 
-    df = pd.DataFrame(results)
-    df.to_csv(output_csv, index=False)
-    print(f"✅ Saved {len(df)} fits to {output_csv}")
-    return df
+    with open(output_csv, "w", newline="") as csvfile:
+        writer = DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for model_index, model in enumerate(stream_models(model_file)):
+            if model_index % 1000 == 0:
+                print(f"Processing model {model_index}...")
+
+            fit = compute_best_fit(model, p_obs, sigma_obs, l_values)
+            if fit is None:
+                continue
+
+            # 🔍 Require one-to-one match
+            if not is_one_to_one(fit, l_values):
+                continue  # skip this model entirely
+
+            row = {**model["params"]}
+            row.update({
+                "model_index": model_index,
+                "S": fit["S"],
+                "Nm": fit["Nm"]
+            })
+            for j, (po, pm, li, idx) in enumerate(
+                zip(p_obs, fit["matched_p_model"], l_values, fit["matched_model_mode_index"])
+            ):
+                row[f"matched_p_obs{j}"] = po
+                row[f"matched_p_model{j}"] = pm
+                row[f"matched_l{j}"] = li
+                row[f"matched_model_mode_index{j}"] = idx
+
+            writer.writerow(row)
+
+    print(f"✅ Finished streaming fit. Results written to {output_csv}")
 
 
-# ---- CLI interface ----
+# ---- CLI ----
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Fit observed oscillation periods to stellar models."
+        description="Fit observed oscillation periods to stellar models (streaming version)."
     )
     parser.add_argument("--models", required=True, help="Path to the model file")
     parser.add_argument("--obs", required=True, help="Path to the observed periods file")
