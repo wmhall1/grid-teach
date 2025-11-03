@@ -52,7 +52,7 @@ def parse_model_file(filename):
                 "modes": modes_by_l
             })
         i += 1
-        if i % 1000 == 0:
+        if i % 10000 == 0:
             print(i)
     return models
 
