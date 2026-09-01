@@ -6,7 +6,7 @@ from math import sqrt
 PARAM_NAMES = [
     "temp", "mass", "menv", "mhe", "mh", "Xhebar",
     "alph1", "alph2", "alpha", "h1", "h2", "h3",
-    "w1", "w2", "w3"
+    "w1", "w2", "w3","w4"
 ]
 
 def stream_models(filename):
