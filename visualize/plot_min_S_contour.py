@@ -60,20 +60,28 @@ def plot_S_contour(csv_file, output_file=None, levels=20, log=False):
     mi = np.linspace(mass.min(), mass.max(), 200)
     Ti, Mi = np.meshgrid(ti, mi)
 
-    # Try cubic interpolation, fall back if needed
-    try:
-        Si = griddata((temp, mass), S, (Ti, Mi), method="cubic")
-    except Exception as e:
-        print("⚠️ Cubic interpolation failed, falling back to 'linear'.")
-        print(f"   Reason: {e}")
-        Si = griddata((temp, mass), S, (Ti, Mi), method="linear")
+    # Linear interpolation avoids cubic overshoot
+    Si = griddata(
+        (temp, mass),
+        S,
+        (Ti, Mi),
+        method="linear"
+    )
 
     if Si is None or np.all(np.isnan(Si)):
-        print("⚠️ Linear interpolation failed too, using 'nearest'.")
-        Si = griddata((temp, mass), S, (Ti, Mi), method="nearest")
+        print("⚠️ Linear interpolation failed, using 'nearest'.")
+        Si = griddata(
+            (temp, mass),
+            S,
+            (Ti, Mi),
+            method="nearest"
+        )
+
 
     # Clip negatives which shouldn't exist
-    Si = np.clip(Si, a_min=0, a_max=None)
+    Si = np.clip(Si, np.nanmin(S), np.nanmax(S))
+    print(f"Raw grouped S range: {np.nanmin(S):.6g} -> {np.nanmax(S):.6g}")
+    print(f"Interpolated S range: {np.nanmin(Si):.6g} -> {np.nanmax(Si):.6g}")
 
     # --- Plot contour ---
     plt.figure(figsize=(8, 6))
